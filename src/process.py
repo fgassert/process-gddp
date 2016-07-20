@@ -99,24 +99,28 @@ def processnc2tiff(inNC, outTiff, function):
             dst.write(arr.astype(dtype))
 
 def worker(args):
-    inUrl, tmpIn, function = args
+    try:
+        inUrl, tmpIn, function = args
 
-    outName = tmpIn[:-3]+'.tif'
+        outName = tmpIn[:-3]+'.tif'
 
-    print "Fetching {}".format(inUrl)
-    urllib.urlretrieve(inUrl, tmpIn)
+        print "Fetching {}".format(inUrl)
+        urllib.urlretrieve(inUrl, tmpIn)
 
-    print "Processing {}".format(outName)
-    processnc2tiff(tmpIn, outName, function)
+        print "Processing {}".format(outName)
+        processnc2tiff(tmpIn, outName, function)
 
-    s3 = boto3.client('s3')
-    key = 'tmp/nex-gddp/{}'.format(outName)
-    print "Putting {}".format(key)
+        s3 = boto3.client('s3')
+        key = 'tmp/nex-gddp/{}'.format(outName)
+        print "Putting {}".format(key)
 
-    s3.put_object(ACL=acl, Bucket=bucket, Key=key, Body=outName)
+        s3.put_object(ACL=acl, Bucket=bucket, Key=key, Body=outName)
 
-    os.remove(tmpIn)
-    os.remove(outName)
+        os.remove(tmpIn)
+        os.remove(outName)
+
+    except Exception as e:
+        print e, args
 
 def main(threads = 1):
     tasks = []

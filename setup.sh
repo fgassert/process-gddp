@@ -5,9 +5,9 @@ set -x
 VPC=vpc-5fc4203a
 INSTANCE=m4.4xlarge
 IAMROLE=s3full
-THREADS=32
+THREADS=64
 MACHINE=default
-DISK_SIZE=32
+DISK_SIZE=50
 
 if [ "$1" = "aws-machine" ]
 then
