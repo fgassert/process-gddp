@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -x
+
+VPC=vpc-5fc4203a
+INSTANCE=c3.8xlarge
+IAMROLE=s3full
+THREADS=64
+MACHINE=default
+DISK_SIZE=80
+SPOT_PRICE=1
+SCRIPT=process_annual.py
+LOGS=process-gddp.log
+
+while getopts aS: opt; do
+    case $opt in
+        a)
+            MACHINE=aws-machine
+            ;;
+        S)
+            SCRIPT=$OPTARG
+            ;;
+    esac
+done
+
+if [ "$MACHINE" = "aws-machine" ]
+then
+    docker-machine create -d amazonec2 \
+                   --amazonec2-vpc-id=$VPC \
+                   --amazonec2-instance-type=$INSTANCE \
+                   --amazonec2-iam-instance-profile=$IAMROLE \
+                   --amazonec2-root-size=$DISK_SIZE \
+                   --amazonec2-request-spot-instance \
+                   --amazonec2-spot-price=$SPOT_PRICE \
+                   $MACHINE;
+fi
+
+eval $(docker-machine env $MACHINE)
+
+docker build -t process-gddp .
+docker run -t --name process-gddp \
+       -e AWS_ACCESS_KEY_ID \
+       -e AWS_SECRET_ACCESS_KEY \
+       process-gddp:latest python $SCRIPT $THREADS
+docker logs process-gddp > $LOGS
+docker rm process-gddp
+
+if [ "$1" = "aws-machine" ]
+then
+    docker-machine stop $MACHINE
+    docker-machine rm -f $MACHINE
+    aws ec2 delete-key-pair --key-name=aws-machine
+fi
