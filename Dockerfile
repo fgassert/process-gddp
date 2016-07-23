@@ -11,4 +11,6 @@ RUN pip install --no-cache-dir numpy
 RUN pip install --no-cache-dir netcdf4 boto3 rasterio
 
 COPY ./src /usr/src
+VOLUME /usr/src
+
 CMD ["python", "./process.py"]

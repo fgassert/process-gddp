@@ -1,4 +1,5 @@
 *#
 *~
 process-gddp.log
-
+*.tif
+tmp*
