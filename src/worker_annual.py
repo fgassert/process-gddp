@@ -7,16 +7,18 @@ import urllib
 def bandMean(arr):
     return arr.mean(axis=0)[np.newaxis]
 def bandMin(arr):
-    return arr.min(axis=0)[np.newaxis]
+    return arr.min(axis=0, keepdims=True)
 def bandMax(arr):
-    return arr.max(axis=0)[np.newaxis]
+    return arr.max(axis=0, keepdims=True)
+
 def processTiff(inFile, outFile, f):
     with rio.open(inFile, 'r', 'GTiff') as src:
         profile = src.profile
         arr = f(src.read())
         profile['count'] = arr.shape[0]
         profile['height'] = arr.shape[1]
-        profile['width'] = arr.shape[1]
+        profile['width'] = arr.shape[2]
+        profile['transform'] = src.affine
         with rio.open(outFile, 'w', **profile) as dst:
             dst.write(arr)
 
