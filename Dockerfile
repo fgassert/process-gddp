@@ -8,7 +8,7 @@ WORKDIR /usr/src
 RUN apt-get update
 RUN apt-get install -y libhdf5-dev gdal-bin libgdal-dev
 RUN pip install --no-cache-dir numpy
-RUN pip install --no-cache-dir netcdf4 boto3 rasterio
+RUN pip install --no-cache-dir netcdf4 boto3 rasterio pandas
 
 COPY ./src /usr/src
 VOLUME /usr/src

@@ -5,11 +5,11 @@ import rasterio as rio
 import urllib
 
 def bandMean(arr):
-    return arr.mean(axis=0)[np.newaxis]
+    return np.nanmean(arr,axis=0, keepdims=True)
 def bandMin(arr):
-    return arr.min(axis=0, keepdims=True)
+    return np.nanmin(arr,axis=0, keepdims=True)
 def bandMax(arr):
-    return arr.max(axis=0, keepdims=True)
+    return np.nanmax(arr,axis=0, keepdims=True)
 
 def processTiff(inFile, outFile, f):
     with rio.open(inFile, 'r', 'GTiff') as src:

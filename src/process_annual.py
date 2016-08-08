@@ -7,7 +7,7 @@ import sys
 from worker_annual import worker
 
 
-inurlTemplate = "http://md.cc.s3.amazonaws.com/tmp/nex-gddp/{variable}_day_BCSD_{scenario}_r1i1p1_{model}_{year}.tif"
+inurlTemplate = "http://md.cc.s3.amazonaws.com/tmp/nex-gddp/monthly/{variable}_monthly_BCSD_{scenario}_r1i1p1_{model}_{year}.tif"
 outkeyTemplate = "tmp/nex-gddp/annual/{variable}_annual_BCSD_{scenario}_r1i1p1_{model}_{year}.tif"
 prefix = 'tmp/nex-gddp/annual/'
 bucket = "md.cc"
@@ -88,4 +88,6 @@ if __name__ == "__main__":
     threads = 1
     if len(sys.argv)>1:
         threads = int(sys.argv[1])
+    if len(sys.argv)>2:
+        os.chdir(sys.argv[2])
     main(threads)

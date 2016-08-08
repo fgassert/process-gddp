@@ -7,11 +7,11 @@ import sys
 from worker_monthly import worker
 
 inurlTemplate = "http://nasanex.s3.amazonaws.com/NEX-GDDP/BCSD/{scenario}/day/atmos/{variable}/r1i1p1/v1.0/{variable}_day_BCSD_{scenario}_r1i1p1_{model}_{year}.nc"
-outkeyTemplate = "tmp/nex-gddp/{variable}_day_BCSD_{scenario}_r1i1p1_{model}_{year}.nc"
-prefix = 'tmp/nex-gddp/'
-
+outkeyTemplate = "tmp/nex-gddp/monthly/{variable}_monthly_BCSD_{scenario}_r1i1p1_{model}_{year}.tif"
+prefix = 'tmp/nex-gddp/monthly'
 bucket = "md.cc"
 acl = "public-read"
+
 
 scenarios = ["historical","rcp85","rcp45"]
 variables = ["pr","tasmax","tasmin"]
@@ -37,8 +37,8 @@ models =    ['ACCESS1-0',
               'bcc-csm1-1',
               'inmcm4']
 
-yearsHistorical = np.arange(1950,2006)
-yearsFuture = np.arange(2006,2100)
+yearsHistorical = range(1950,2006)
+yearsFuture = range(2006,2100)
 
 def templater(template, v, s, m, y):
     return template.format(variable=v, scenario=s, model=m, year=y)
@@ -90,4 +90,6 @@ if __name__ == "__main__":
     threads = 1
     if len(sys.argv)>1:
         threads = int(sys.argv[1])
+    if len(sys.argv)>2:
+        os.chdir(sys.argv[2])
     main(threads)

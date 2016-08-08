@@ -11,7 +11,7 @@ def monthlyMeans(inArr):
     mo = t/12.0
     #months are 30 or 31 days
     for i in range(12):
-        arr[i] = inArr[int(mo*i):int(mo*(i+1))].mean(axis=0)
+        arr[i] = np.nanmean(inArr[int(mo*i):int(mo*(i+1))], axis=0)
     return arr
 
 def monthlyMax(inArr):
@@ -20,7 +20,7 @@ def monthlyMax(inArr):
     mo = t/12.0
     #months are 30 or 31 days
     for i in range(12):
-        arr[i] = inArr[int(mo*i):int(mo*(i+1))].max(axis=0)
+        arr[i] = np.nanmax(inArr[int(mo*i):int(mo*(i+1))], axis=0)
     return arr
 
 def monthlyMin(inArr):
@@ -29,30 +29,33 @@ def monthlyMin(inArr):
     mo = t/12.0
     #months are 30 or 31 days
     for i in range(12):
-        arr[i] = inArr[int(mo*i):int(mo*(i+1))].min(axis=0)
+        arr[i] = np.nanmin(inArr[int(mo*i):int(mo*(i+1))], axis=0)
     return arr
 
-def processNc2Tiff(inNC, outTiff, function):
+def processNc2Tiff(inNC, outTiff, function, var):
     with nc.Dataset(inNC) as src:
-        inArr = src.variables[var]
-        dtype = inArr.dtype
-        arr = function(inArr)
+        arr = np.array(src.variables[var])
+        if ("missing_value" in src.variables[var].ncattrs()):
+            arr[arr==src.variables[var].missing_value] = np.nan
 
-        t,h,w = arr.shape
-        #roll x-axis for 180W origin
-        arr = np.roll(arr, w/2, axis=2)
-        #set scale to .25 and origin to 90S,180W
-        transform = rio.Affine(360.0/w,0,-180,0,180.0/h,-90)
+    dtype = arr.dtype
+    arr = function(arr)
 
-        with rio.open(outTiff, 'w', 'GTiff',
-                      width = w,
-                      height = h,
-                      count = t,
-                      crs = "WGS84",
-                      transform = transform,
-                      dtype = dtype
-        ) as dst:
-            dst.write(arr.astype(dtype))
+    t,h,w = arr.shape
+    #roll x-axis for 180W origin
+    arr = np.roll(arr, w/2, axis=2)
+    #set scale to .25 and origin to 90S,180W
+    transform = rio.Affine(360.0/w,0,-180,0,180.0/h,-90)
+
+    with rio.open(outTiff, 'w', 'GTiff',
+                  width = w,
+                  height = h,
+                  count = t,
+                  crs = "WGS84",
+                  transform = transform,
+                  dtype = dtype
+    ) as dst:
+        dst.write(arr.astype(dtype))
 
 def worker(options):
     try:
@@ -74,7 +77,7 @@ def worker(options):
             "tasmin":monthlyMin
         }[var]
 
-        processNc2Tiff(tmp1, tmp2, f)
+        processNc2Tiff(tmp1, tmp2, f, var)
 
         print ("{} Putting {}".format(i,outKey))
 
@@ -93,3 +96,6 @@ def worker(options):
         except:
             pass
 
+
+if __name__ == "__main__":
+    processNc2Tiff('pr_day_BCSD_rcp45_r1i1p1_CCSM4_2010.nc', 'out.tif', monthlyMeans, 'pr')

@@ -3,3 +3,4 @@
 process-gddp.log
 *.tif
 tmp*
+*.pyc
