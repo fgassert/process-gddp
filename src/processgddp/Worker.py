@@ -59,14 +59,14 @@ def _writeTiff(arr, outfile, profile):
     profile["count"] = arr.shape[0]
     try:
         with rio.open(outfile, 'w', **profile) as dst:
-            dst.write(arr)
+            dst.write(arr.astype(profile['dtype']))
     except (SystemExit, KeyboardInterrupt):
         logging.info('Exiting gracefully {}'.format(outfile))
         os.remove(outfile)
     return outfile
 
 def write(arr, outfile, profile):
-    return _writeTiff(arr.astype(profile['dtype']), outfile, profile)
+    return _writeTiff(arr, outfile, profile)
 
 def _readNC(infile):
     with rio.open(infile) as src:

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import numpy as np
-from . import DependencyHandler as dh
 
 BASELINE='1970-2000'
 
@@ -75,6 +74,8 @@ FUNCTIONS = {
 }
 
 def registerFormulae():
+    from . import DependencyHandler as dh
+
     # annual averages
     dh.registerFormula(dh.Formula, name='annual', requires='src', function='mean')
 
