@@ -52,7 +52,6 @@ def srcName(v, s, m, y):
         variable=v, scenario=s, model=m, year=str(y))
 
 def validateKey(key):
-    print(key)
     vals = os.path.splitext(key)[0].split('_')
     yrs = vals[4].split('-')
     if not len(vals) == 5:
@@ -74,6 +73,7 @@ def validateKey(key):
           (len(yrs) == 1 or (int(yrs[1]) >= STARTYEAR and int(yrs[1]) <= ENDYEAR))):
         raise Exception('Invalid key {}; Year(s) {} must be between {},{}'.format(
             key, yrs, STARTYEAR, ENDYEAR))
+    return True
 
 def parseKey(key):
     vals = os.path.splitext(key)[0].split('_')
@@ -163,8 +163,11 @@ class Formula2(Formula):
         self._requires = requires
         self._requires2 = requires2
     def requires(self, v, s, m, y):
-        if int(y) < PROJYEAR:
-            s = SCENARIOS[0]
+        try:
+            if int(y) < PROJYEAR:
+                s = SCENARIOS[0]
+        except:
+            pass
         return [
             keyName(self._requires, v, s, m, y),
             self._requires2.format(variable=v, scenario=s, model=m, year=y)
