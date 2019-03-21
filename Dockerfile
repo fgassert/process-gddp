@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir boto3 rasterio
 
 COPY ./src /usr/src
 
-CMD ["python", "./main.py"]
+CMD ["python ./main.py"]

@@ -12,5 +12,6 @@ _cache
 __pycache__
 
 .env
+.user-data*
 
 .DS_Store

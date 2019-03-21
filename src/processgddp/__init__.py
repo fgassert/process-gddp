@@ -41,6 +41,7 @@ def build_async(objs, skipExisting=True, options=OPTIONS, threads=None, timeout=
     client = FileHandler.Client(**options)
     pool = mp.Pool(threads)
     for keys in DependencyHandler.dependencyTree(objs, client, skipExisting):
+        print("Tasks in level: {}".format(len(keys)))
         msgs = pool.map_async(
             partial(DependencyHandler.buildKey, options=options),
             keys
@@ -62,7 +63,7 @@ def printDependencies(keys):
 def main(keys):
     for key in keys:
         DependencyHandler.validateKey(key)
-    printDependencies(keys)
+    #printDependencies(keys)
     build_async(keys)
 
 def test():

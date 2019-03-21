@@ -89,7 +89,9 @@ def getParams(key):
 def listFormulae():
     return _Formulae.keys()
 
-def _getDepends(key, client, depth=0, skipExisting=False, skipExternal=True):
+def _getDepends(key, client, depth=0, skipExisting=False, skipExternal=True, skip=[]):
+    if key in skip:
+        return []
     if key[:4] == 'http':
         if skipExternal:
             return []
@@ -109,7 +111,7 @@ def dependencyTree(keys, client, skipExisting=False, skipExternal=True):
     outKeys = []
     depth = 0
     for k in keys:
-        dependencies.extend(_getDepends(k, client, 0, skipExisting, skipExternal))
+        dependencies.extend(_getDepends(k, client, 0, skipExisting, skipExternal, dependencies))
     while depth==0 or len(outKeys[0]):
         depthFilter = filter(lambda d: d[1]==depth, dependencies)
         unique = list(set([d[0] for d in depthFilter]))
