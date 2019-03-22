@@ -82,10 +82,10 @@ def registerFormulae():
     # extreme values
     dh.registerFormula(dh.Formula, name='q99', requires='src', function='q99')
     dh.registerFormula(dh.Formula2, name='gt-q99', requires='src', function='gt',
-                      requires2=dh.getTemplate(f='abs-q99', y=BASELINE))
+                      requires2=dh.getTemplate(f='abs-q99', s='historical', y=BASELINE))
     dh.registerFormula(dh.Formula, name='q98', requires='src', function='q98')
     dh.registerFormula(dh.Formula2, name='gt-q98', requires='src', function='gt',
-                      requires2=dh.getTemplate(f='abs-q98', y=BASELINE))
+                      requires2=dh.getTemplate(f='abs-q98', s='historical', y=BASELINE))
 
     # moving averages and ensembles for each indicator
     for indicator in ('annual', 'q98', 'q99', 'gt-q99', 'gt-q98'):
@@ -94,9 +94,9 @@ def registerFormulae():
         ch = 'ch-{}'.format(indicator)
         dh.registerFormula(dh.TimeFormula, ma, indicator, 'mean')
         dh.registerFormula(dh.Formula2, diff, ma, 'sub',
-                    requires2=dh.getTemplate(f=ma, y=BASELINE))
+                    requires2=dh.getTemplate(f=ma, s='historical', y=BASELINE))
         dh.registerFormula(dh.Formula2, ch, ma, 'div',
-                    requires2=dh.getTemplate(f=ma, y=BASELINE))
+                    requires2=dh.getTemplate(f=ma, s='historical', y=BASELINE))
         for stat in ['mean', 'q25', 'q75', 'q50']:
             dh.registerFormula(dh.EnsembleFormula, requires=ma, function=stat)
             dh.registerFormula(dh.EnsembleFormula, requires=diff, function=stat)

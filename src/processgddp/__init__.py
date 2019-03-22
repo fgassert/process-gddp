@@ -27,7 +27,9 @@ logging.basicConfig(level=logging.INFO)
 def build(objs, skipExisting=True, options=OPTIONS):
     ''''''
     client = FileHandler.Client(**options)
-    for keys in DependencyHandler.dependencyTree(objs, client, skipExisting):
+    dependencies = DependencyHandler.dependencyTree(objs, client, skipExisting)
+    logging.info("Shape: {}".format([len(d) for d in dependencies]))
+    for keys in dependencies:
         logging.info("Tasks in level: {}".format(len(keys)))
         msgs = map(
             partial(f.buildKey, options=options),
@@ -40,8 +42,10 @@ def build(objs, skipExisting=True, options=OPTIONS):
 def build_async(objs, skipExisting=True, options=OPTIONS, threads=None, timeout=604800):
     '''executes the formulae for each key in parallel'''
     client = FileHandler.Client(**options)
-    pool = mp.Pool(threads)
-    for keys in DependencyHandler.dependencyTree(objs, client, skipExisting):
+    dependencies = DependencyHandler.dependencyTree(objs, client, skipExisting)
+    logging.info("Shape: {}".format([len(d) for d in dependencies]))
+    for keys in dependencies:
+        pool = mp.Pool(threads)
         logging.info("Tasks in level: {}".format(len(keys)))
         msgs = pool.map_async(
             partial(DependencyHandler.buildKey, options=options),
@@ -50,7 +54,7 @@ def build_async(objs, skipExisting=True, options=OPTIONS, threads=None, timeout=
         for m in msgs:
             if m:
                 logging.info(m)
-    pool.close()
+        pool.close()
 
 
 def printDependencies(keys):
