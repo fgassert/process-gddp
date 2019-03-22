@@ -28,37 +28,38 @@ def build(objs, skipExisting=True, options=OPTIONS):
     ''''''
     client = FileHandler.Client(**options)
     for keys in DependencyHandler.dependencyTree(objs, client, skipExisting):
+        logging.info("Tasks in level: {}".format(len(keys)))
         msgs = map(
             partial(f.buildKey, options=options),
             keys
         )
         for m in msgs:
             if m:
-                print (m)
+                logging.info(m)
 
 def build_async(objs, skipExisting=True, options=OPTIONS, threads=None, timeout=604800):
     '''executes the formulae for each key in parallel'''
     client = FileHandler.Client(**options)
     pool = mp.Pool(threads)
     for keys in DependencyHandler.dependencyTree(objs, client, skipExisting):
-        print("Tasks in level: {}".format(len(keys)))
+        logging.info("Tasks in level: {}".format(len(keys)))
         msgs = pool.map_async(
             partial(DependencyHandler.buildKey, options=options),
             keys
         ).get(timeout)
         for m in msgs:
             if m:
-                print (m)
+                logging.info(m)
     pool.close()
 
 
 def printDependencies(keys):
     client = FileHandler.Client(**OPTIONS)
-    print ("Dependencies:")
-    for dependencies in DependencyHandler.dependencyTree(keys, client, skipExternal=False):
-        for d in dependencies:
-            print (d)
-
+    logging.info("Dependencies:")
+    dependencies = DependencyHandler.dependencyTree(keys, client, skipExternal=False, skipExisting=True)
+    for d in dependencies:
+        logging.info(d)
+    logging.info("Shape: {}".format([len(d) for d in dependencies]))
 
 def main(keys):
     for key in keys:

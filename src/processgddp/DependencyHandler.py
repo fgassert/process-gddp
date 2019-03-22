@@ -148,7 +148,9 @@ class Formula:
             if int(y) < PROJYEAR:
                 s = SCENARIOS[0]
         except:
-            pass
+            y1, y2 = y.split('-')
+            if int(y1) < PROJYEAR and int(y2) < PROJYEAR:
+                s = SCENARIOS[0]
         return keyName(self.name, v, s, m, y)
     def execute(self, v, s, m, y, options={}):
         return worker(
@@ -169,7 +171,9 @@ class Formula2(Formula):
             if int(y) < PROJYEAR:
                 s = SCENARIOS[0]
         except:
-            pass
+            y1, y2 = y.split('-')
+            if int(y1) < PROJYEAR and int(y2) < PROJYEAR:
+                s = SCENARIOS[0]
         return [
             keyName(self._requires, v, s, m, y),
             self._requires2.format(variable=v, scenario=s, model=m, year=y)
