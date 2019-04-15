@@ -63,7 +63,7 @@ FUNCTIONS = {
     'gt95f':countAbove(f2k(95)),
     'gt90f':countAbove(f2k(90)),
     'gt32f':countAbove(f2k(32)),
-    'gt50':countAbove(mm2kgs(50)),
+    'gt50mm':countAbove(mm2kgs(50)),
     'hdd65f':hdd(f2k(65)),
     'cdd65f':cdd(f2k(65)),
     'hdd16c':hdd(c2k(16)),
@@ -80,6 +80,8 @@ def registerFormulae():
     dh.registerFormula(dh.Formula, name='annual', requires='src', function='mean')
 
     # extreme values
+    dh.registerFormula(dh.Formula, name='gt50mm', requires='src', function='gt50mm')
+
     dh.registerFormula(dh.Formula, name='q99', requires='src', function='q99')
     dh.registerFormula(dh.Formula2, name='gt-q99', requires='src', function='gt',
                       requires2=dh.getTemplate(f='abs-q99', s='historical', y=BASELINE))
@@ -88,7 +90,7 @@ def registerFormulae():
                       requires2=dh.getTemplate(f='abs-q98', s='historical', y=BASELINE))
 
     # moving averages and ensembles for each indicator
-    for indicator in ('annual', 'q98', 'q99', 'gt-q99', 'gt-q98'):
+    for indicator in ('annual', 'q98', 'q99', 'gt-q99', 'gt-q98', 'gt50mm'):
         ma = 'abs-{}'.format(indicator)
         diff = 'diff-{}'.format(indicator)
         ch = 'ch-{}'.format(indicator)
