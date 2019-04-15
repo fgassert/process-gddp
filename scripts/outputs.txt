@@ -1,11 +1,11 @@
-q50-abs-annual_tmax_rcp45_ens_2015-2045.tif
-q50-abs-annual_tmax_rcp85_ens_2015-2045.tif
-q50-abs-annual_tmax_rcp45_ens_2035-2065.tif
-q50-abs-annual_tmax_rcp85_ens_2035-2065.tif
-q50-diff-annual_tmax_rcp45_ens_2015-2045.tif
-q50-diff-annual_tmax_rcp85_ens_2015-2045.tif
-q50-diff-annual_tmax_rcp45_ens_2035-2065.tif
-q50-diff-annual_tmax_rcp85_ens_2035-2065.tif
+q50-abs-annual_tasmax_rcp45_ens_2015-2045.tif
+q50-abs-annual_tasmax_rcp85_ens_2015-2045.tif
+q50-abs-annual_tasmax_rcp45_ens_2035-2065.tif
+q50-abs-annual_tasmax_rcp85_ens_2035-2065.tif
+q50-diff-annual_tasmax_rcp45_ens_2015-2045.tif
+q50-diff-annual_tasmax_rcp85_ens_2015-2045.tif
+q50-diff-annual_tasmax_rcp45_ens_2035-2065.tif
+q50-diff-annual_tasmax_rcp85_ens_2035-2065.tif
 
 q50-abs-annual_pr_rcp45_ens_2015-2045.tif
 q50-abs-annual_pr_rcp85_ens_2015-2045.tif
