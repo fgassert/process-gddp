@@ -1,3 +1,4 @@
+q50-abs-annual_tasmax_historical_ens_1970-2000.tif
 q50-abs-annual_tasmax_rcp45_ens_2015-2045.tif
 q50-abs-annual_tasmax_rcp85_ens_2015-2045.tif
 q50-abs-annual_tasmax_rcp45_ens_2035-2065.tif
@@ -7,6 +8,17 @@ q50-diff-annual_tasmax_rcp85_ens_2015-2045.tif
 q50-diff-annual_tasmax_rcp45_ens_2035-2065.tif
 q50-diff-annual_tasmax_rcp85_ens_2035-2065.tif
 
+q50-abs-gt95f_tasmax_historical_ens_1970-2000.tif
+q50-abs-gt95f_tasmax_rcp45_ens_2015-2045.tif
+q50-abs-gt95f_tasmax_rcp85_ens_2015-2045.tif
+q50-abs-gt95f_tasmax_rcp45_ens_2035-2065.tif
+q50-abs-gt95f_tasmax_rcp85_ens_2035-2065.tif
+q50-diff-gt95f_tasmax_rcp45_ens_2015-2045.tif
+q50-diff-gt95f_tasmax_rcp85_ens_2015-2045.tif
+q50-diff-gt95f_tasmax_rcp45_ens_2035-2065.tif
+q50-diff-gt95f_tasmax_rcp85_ens_2035-2065.tif
+
+q50-abs-annual_pr_historical_ens_1970-2000.tif
 q50-abs-annual_pr_rcp45_ens_2015-2045.tif
 q50-abs-annual_pr_rcp85_ens_2015-2045.tif
 q50-abs-annual_pr_rcp45_ens_2035-2065.tif
@@ -16,6 +28,7 @@ q50-diff-annual_pr_rcp85_ens_2015-2045.tif
 q50-diff-annual_pr_rcp45_ens_2035-2065.tif
 q50-diff-annual_pr_rcp85_ens_2035-2065.tif
 
+q50-abs-q99_pr_historical_ens_1970-2000.tif
 q50-abs-q99_pr_rcp45_ens_2015-2045.tif
 q50-abs-q99_pr_rcp85_ens_2015-2045.tif
 q50-abs-q99_pr_rcp45_ens_2035-2065.tif
@@ -25,6 +38,7 @@ q50-diff-q99_pr_rcp85_ens_2015-2045.tif
 q50-diff-q99_pr_rcp45_ens_2035-2065.tif
 q50-diff-q99_pr_rcp85_ens_2035-2065.tif
 
+q50-abs-gt50mm_pr_historical_ens_1970-2000.tif
 q50-abs-gt50mm_pr_rcp45_ens_2015-2045.tif
 q50-abs-gt50mm_pr_rcp85_ens_2015-2045.tif
 q50-abs-gt50mm_pr_rcp45_ens_2035-2065.tif
