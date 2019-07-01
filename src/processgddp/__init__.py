@@ -12,50 +12,31 @@ formulae.registerFormulae()
 
 PREFIX = os.environ.get('GDDP_PREFIX', 'gddp')
 BUCKET = os.environ.get('GDDP_BUCKET', 'gddp')
+ACCESSKEY = os.environ.get('AWS_ACCESS_KEY_ID')
+SECRETKEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 OPTIONS = {
     'nocache':False,
     'bucket':BUCKET,
     'prefix':PREFIX,
-    'access_key':None,
-    'secret':None,
+    'access_key':ACCESSKEY,
+    'secret':SECRETKEY,
     'cachedir':'_cache',
     'verbose':True
 }
 
 logging.basicConfig(level=logging.INFO)
 
-def build(objs, skipExisting=True, options=OPTIONS):
+def build(objs, skipExisting=True, options=OPTIONS, poolargs={}):
     ''''''
     client = FileHandler.Client(**options)
-    dependencies = DependencyHandler.dependencyTree(objs, client, skipExisting)
-    logging.info("Shape: {}".format([len(d) for d in dependencies]))
-    for keys in dependencies:
-        logging.info("Tasks in level: {}".format(len(keys)))
-        msgs = map(
-            partial(f.buildKey, options=options),
-            keys
-        )
-        for m in msgs:
-            if m:
-                logging.info(m)
+    tree = DependencyHandler.dependencyTree(objs, client, skipExisting, poolargs)
+    return tree.build(options=options)
 
-def build_async(objs, skipExisting=True, options=OPTIONS, threads=None, timeout=604800):
+def build_async(objs, skipExisting=True, options=OPTIONS, poolargs={}):
     '''executes the formulae for each key in parallel'''
     client = FileHandler.Client(**options)
-    dependencies = DependencyHandler.dependencyTree(objs, client, skipExisting)
-    logging.info("Shape: {}".format([len(d) for d in dependencies]))
-    for keys in dependencies:
-        pool = mp.Pool(threads)
-        logging.info("Tasks in level: {}".format(len(keys)))
-        msgs = pool.map_async(
-            partial(DependencyHandler.buildKey, options=options),
-            keys
-        ).get(timeout)
-        for m in msgs:
-            if m:
-                logging.info(m)
-        pool.close()
-
+    tree = DependencyHandler.dependencyTree(objs, client, skipExisting, poolargs)
+    return tree.build_async(options=options)
 
 def printDependencies(keys):
     client = FileHandler.Client(**OPTIONS)
@@ -66,9 +47,6 @@ def printDependencies(keys):
     logging.info("Shape: {}".format([len(d) for d in dependencies]))
 
 def main(keys):
-    for key in keys:
-        DependencyHandler.validateKey(key)
-    #printDependencies(keys)
     build_async(keys)
 
 def test():

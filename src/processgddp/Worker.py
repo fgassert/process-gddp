@@ -5,41 +5,32 @@ import urllib
 import logging
 
 from . import FileHandler
-from .formulae import FUNCTIONS
 
 NOCACHE = False
 STRICT = True
 
-def worker(yields, requires, function=None, options={}):
+def worker(yields, requires, function=None, options={}, dryrun=False):
+    if dryrun:
+        print(yields, requires)
+        return yields
     nocache = options.get('nocache', NOCACHE)
     strict = options.get('strict', STRICT)
     client = FileHandler.Client(**options)
-    if function not in FUNCTIONS:
-        raise Exception("Function {} not defined".format(function))
 
-    try:
-        arr, profile = getData(requires, client, nocache)
+    arr, profile = getData(requires, client, nocache)
 
-        logging.info('Processing {}'.format(yields))
-        arr = FUNCTIONS[function](arr)
+    logging.info('Processing {}'.format(yields))
+    arr = function(arr)
 
-        fname = client.cached(yields)
-        write(arr, fname, profile)
-        client.putObj(fname, yields)
+    fname = client.cached(yields)
+    write(arr, fname, profile)
+    client.putObj(fname, yields)
 
-        if nocache:
-            client.cleanObjs(fname)
-            client.cleanObjs(requires)
+    if nocache:
+        client.cleanObjs(fname)
+        client.cleanObjs(requires)
 
-    except Exception as e:
-        err = '{}: {}'.format(yields, e)
-        if strict:
-            raise Exception(err)
-        else:
-            logging.error(err)
-            return err
-
-    return None
+    return yields
 
 def getData(requires, client, nocache=NOCACHE):
     arr = None

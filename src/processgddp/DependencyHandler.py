@@ -2,7 +2,8 @@
 
 import os
 from .Worker import worker
-from .formulae import FUNCTIONS
+from .TaskTree import TaskTree
+from functools import partial
 
 SRCTEMPLATE = "http://nasanex.s3.amazonaws.com/NEX-GDDP/BCSD/{scenario}/day/atmos/{variable}/r1i1p1/v1.0/{variable}_day_BCSD_{scenario}_r1i1p1_{model}_{year}.nc"
 FILETEMPLATE = "{function}_{variable}_{scenario}_{model}_{year}.tif"
@@ -52,7 +53,7 @@ def srcName(v, s, m, y):
         variable=v, scenario=s, model=m, year=str(y))
 
 def validateKey(key):
-    vals = os.path.splitext(key)[0].split('_')
+    vals = parseKey(key)
     yrs = vals[4].split('-')
     if not len(vals) == 5:
         raise Exception('Invalid key {}; Must be of format {}'.format(
@@ -73,7 +74,7 @@ def validateKey(key):
           (len(yrs) == 1 or (int(yrs[1]) >= STARTYEAR and int(yrs[1]) <= ENDYEAR))):
         raise Exception('Invalid key {}; Year(s) {} must be between {},{}'.format(
             key, yrs, STARTYEAR, ENDYEAR))
-    return True
+    return keyName(*vals)
 
 def parseKey(key):
     vals = os.path.splitext(key)[0].split('_')
@@ -89,47 +90,44 @@ def getParams(key):
 def listFormulae():
     return _Formulae.keys()
 
-def _getDepends(key, client, depth=0, skipExisting=False, skipExternal=True, skip=[]):
-    if key in skip:
-        return []
-    if key[:4] == 'http':
-        if skipExternal:
-            return []
-        return [(key, depth)]
-    if skipExisting and client.objExists2(key):
-        return []
-    dependencies = [(key, depth)]
-    depends = getFormula(key).requires(*getParams(key))
-    for k in depends:
-        dependencies.extend(
-            _getDepends(k, client, depth+1, skipExisting, skipExternal))
-    return dependencies
-
-def dependencyTree(keys, client, skipExisting=False, skipExternal=True):
+def dependencyTree(keys, client, skipExisting=False, poolargs={}):
     '''yeilds depth-first unique dependencies for a given set of task keys'''
-    dependencies = []
-    outKeys = []
-    depth = 0
-    for k in keys:
-        dependencies.extend(_getDepends(k, client, 0, skipExisting, skipExternal, dependencies))
-    while depth==0 or len(outKeys[0]):
-        depthFilter = filter(lambda d: d[1]==depth, dependencies)
-        unique = list(set([d[0] for d in depthFilter]))
-        outKeys.insert(0, unique)
-        depth += 1
-    return outKeys
+    tree = TaskTree(**poolargs)
+    if type(keys) is str:
+        keys = [keys]
+    for key in keys:
+        key = validateKey(key)
+        _addDependencies(tree, key, client, skipExisting)
+    return tree
 
-def registerFormula(ftype, name=None, requires=SOURCEDATA, function='mean', **kwargs):
+def _addDependencies(tree, key, client, skipExisting=False):
+    if skipExisting and client.objExists2(key):
+        tree.add(_dummyfunc, key)
+        return
+    formula = getFormula(key)
+    requires = formula.requires(*getParams(key))
+    for k in requires:
+        if k[:4] != 'http':
+            _addDependencies(tree, k, client, skipExisting)
+        else:
+            tree.add(_dummyfunc, k)
+    tree.add(formula.getFunction(), key, requires)
+
+def _dummyfunc(yields, requires, *args, **kwargs):
+    return yields
+
+def registerFormula(ftype, name=None, requires=SOURCEDATA, function=None, **kwargs):
     if name is None:
         name = '{}-{}'.format(function, requires)
     if name in _Formulae:
         raise Exception("Formula {} already defined".format(name))
-    if function not in FUNCTIONS:
-        raise Exception("Function {} does not exist".format(function))
     _Formulae[name] = ftype(name, requires, function, **kwargs)
 
-def buildKey(key, options={}):
-    return getFormula(key).execute(*getParams(key), options)
+def buildKey(key, *args, **kwargs):
+    formula = getFormula(key)
+    params = getParams(key)
+    requires = formula.requires(*params)
+    return formula.getFunction(key, requires, *args, **kwargs)
 
 class Formula:
     def __init__(self, name, requires, function, description=''):
@@ -152,13 +150,8 @@ class Formula:
             if int(y1) < PROJYEAR and int(y2) < PROJYEAR:
                 s = SCENARIOS[0]
         return keyName(self.name, v, s, m, y)
-    def execute(self, v, s, m, y, options={}):
-        return worker(
-            self.yields(v, s, m, y),
-            self.requires(v, s, m, y),
-            self.function,
-            options
-        )
+    def getFunction(self):
+        return partial(worker, function=self.function)
 
 class Formula2(Formula):
     def __init__(self, name, requires, function, requires2, description=''):
