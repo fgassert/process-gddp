@@ -41,6 +41,7 @@ class TaskTree:
         '''
         if self.exists(taskId):
             logging.warning("Task {} already defined".format(taskId))
+            return
 
         self._taskFunction[taskId] = function
         self._taskRequirements[taskId] = requires

@@ -97,7 +97,8 @@ def dependencyTree(keys, client, skipExisting=False, poolargs={}):
         keys = [keys]
     for key in keys:
         key = validateKey(key)
-        _addDependencies(tree, key, client, skipExisting)
+        if not tree.exists(k):
+            _addDependencies(tree, key, client, skipExisting)
     return tree
 
 def _addDependencies(tree, key, client, skipExisting=False):
@@ -107,10 +108,11 @@ def _addDependencies(tree, key, client, skipExisting=False):
     formula = getFormula(key)
     requires = formula.requires(*getParams(key))
     for k in requires:
-        if k[:4] != 'http':
-            _addDependencies(tree, k, client, skipExisting)
-        else:
-            tree.add(_dummyfunc, k)
+        if not tree.exists(k):
+            if k[:4] != 'http':
+                _addDependencies(tree, k, client, skipExisting)
+            else:
+                tree.add(_dummyfunc, k)
     tree.add(formula.getFunction(), key, requires)
 
 def _dummyfunc(yields, requires, *args, **kwargs):
