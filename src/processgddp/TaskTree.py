@@ -1,8 +1,9 @@
 import multiprocessing
 import logging
+import time
 
 class TaskTree:
-    def __init__(self, timeout=900, **poolargs):
+    def __init__(self, timeout=6000, **poolargs):
         '''
         Class for executing a tree of tasks asyncronously.
 
@@ -94,19 +95,23 @@ class TaskTree:
         completedQueue = multiprocessing.Manager().Queue()
         asyncResults = {}
         results = {}
+        maxTasks = self.poolargs.get('threads') or multiprocessing.cpu_count()
         while len(self):
-            if len(self._unblocked):
+            if len(self._unblocked) and len(self._inprocess) < maxTasks:
                 taskId = self._pop()
                 reqres = [results[t] for t in self._taskRequirements[taskId]]
                 asyncResults[taskId] = pool.apply_async(
                     _executer, (completedQueue,
-                        self._taskFunction[taskId],
-                        taskId,
-                        reqres,
-                        args,
-                        kwargs),
+                                self._taskFunction[taskId],
+                                taskId,
+                                reqres,
+                                args,
+                                kwargs),
                     error_callback=_on_error)
             elif len(self._inprocess):
+                logging.info('inprocess: {}, unblocked: {}, blocked: {}, completed: {}'.format(
+                    len(self._inprocess), len(self._unblocked), len(self._blocked), len(self._completed)
+                ))
                 try:
                     taskId = completedQueue.get(timeout=self.timeout)
                 except:
@@ -114,6 +119,7 @@ class TaskTree:
                         self._inprocess))
                 results[taskId] = asyncResults[taskId].get()
                 self._complete(taskId)
+                logging.info('completed {}'.format(taskId))
             else:
                 raise Exception("Tasks cannot be unblocked: {}".format(
                     self._blocked))

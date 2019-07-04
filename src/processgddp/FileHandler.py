@@ -2,9 +2,9 @@
 
 import boto3
 import os
-import urllib
 import logging
 import signal
+import requests
 
 
 def terminate(signum, frame):
@@ -19,8 +19,11 @@ class Client:
         os.makedirs(self.cachedir, exist_ok=True)
         self.bucket = bucket
         self.prefix = prefix
-        self.client = boto3.resource('s3', aws_access_key_id=access_key,
-                                     aws_secret_access_key=secret)
+        self.session = boto3.session.Session(
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret
+        )
+        self.client = self.session.resource('s3')
         self.existingObjects = []
 
     def checkCache(self, obj):
@@ -65,7 +68,14 @@ class Client:
             if nocache or not os.path.isfile(fname):
                 logging.info("Fetching {}".format (obj))
                 try:
-                    urllib.request.urlretrieve(obj, fname)
+                    session = requests.session()
+                    with session.get(obj, stream=True) as r:
+                        r.raise_for_status()
+                        with open(fname, 'wb') as f:
+                            for chunk in r.iter_content(chunk_size=4096):
+                                if chunk:
+                                    f.write(chunk)
+                    logging.info('DL finished {}'.format(obj))
                 except SystemExit:
                     logging.info('Exiting gracefully {}'.format(fname))
                     os.remove(fname)

@@ -5,6 +5,7 @@ import urllib
 import logging
 
 from . import FileHandler
+from .formulae import FUNCTIONS
 
 NOCACHE = False
 STRICT = True
@@ -13,6 +14,8 @@ def worker(yields, requires, function=None, options={}, dryrun=False):
     if dryrun:
         print(yields, requires)
         return yields
+    if function is None:
+        raise Exception('Function not defined')
     nocache = options.get('nocache', NOCACHE)
     strict = options.get('strict', STRICT)
     client = FileHandler.Client(**options)
@@ -20,7 +23,7 @@ def worker(yields, requires, function=None, options={}, dryrun=False):
     arr, profile = getData(requires, client, nocache)
 
     logging.info('Processing {}'.format(yields))
-    arr = function(arr)
+    arr = FUNCTIONS[function](arr)
 
     fname = client.cached(yields)
     write(arr, fname, profile)

@@ -97,7 +97,7 @@ def dependencyTree(keys, client, skipExisting=False, poolargs={}):
         keys = [keys]
     for key in keys:
         key = validateKey(key)
-        if not tree.exists(k):
+        if not tree.exists(key):
             _addDependencies(tree, key, client, skipExisting)
     return tree
 
@@ -129,7 +129,7 @@ def buildKey(key, *args, **kwargs):
     formula = getFormula(key)
     params = getParams(key)
     requires = formula.requires(*params)
-    return formula.getFunction(key, requires, *args, **kwargs)
+    return formula.getFunction()(key, requires, *args, **kwargs)
 
 class Formula:
     def __init__(self, name, requires, function, description=''):

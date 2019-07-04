@@ -38,22 +38,18 @@ def build_async(objs, skipExisting=True, options=OPTIONS, poolargs={}):
     tree = DependencyHandler.dependencyTree(objs, client, skipExisting, poolargs)
     return tree.build_async(options=options)
 
-def printDependencies(keys):
-    client = FileHandler.Client(**OPTIONS)
-    logging.info("Dependencies:")
-    dependencies = DependencyHandler.dependencyTree(keys, client, skipExternal=False, skipExisting=True)
-    for d in dependencies:
-        logging.info(d)
-    logging.info("Shape: {}".format([len(d) for d in dependencies]))
-
 def main(keys):
-    build_async(keys)
+    if keys:
+        build_async(keys)
+    else:
+        test()
 
 def test():
     keys=[]
     keys.append(DependencyHandler.keyName('gt-q99', 'pr', 'rcp85', 'ACCESS1-0', '2000'))
+    keys.append(DependencyHandler.keyName('abs-drydays', 'pr', 'rcp85', 'ACCESS1-0', '2001-2002'))
     keys.append(DependencyHandler.keyName('mean-abs-annual', 'pr', 'rcp85', 'ens', '2000-2001'))
-    build(keys)
+    build_async(keys, False)
 
 if __name__ == "__main__":
     test()
