@@ -99,24 +99,22 @@ def dependencyTree(keys, client, skipExisting=False, poolargs={}):
         key = validateKey(key)
         if not tree.exists(key):
             _addDependencies(tree, key, client, skipExisting)
+    tree.skip_undefined()
     return tree
 
 def _addDependencies(tree, key, client, skipExisting=False):
     if skipExisting and client.objExists2(key):
-        tree.add(_dummyfunc, key)
+        tree.skip_task(key)
         return
     formula = getFormula(key)
     requires = formula.requires(*getParams(key))
+    tree.add(formula.getFunction(), key, requires)
     for k in requires:
         if not tree.exists(k):
             if k[:4] != 'http':
                 _addDependencies(tree, k, client, skipExisting)
             else:
-                tree.add(_dummyfunc, k)
-    tree.add(formula.getFunction(), key, requires)
-
-def _dummyfunc(yields, requires, *args, **kwargs):
-    return yields
+                tree.skip_task(k)
 
 def registerFormula(ftype, name=None, requires=SOURCEDATA, function=None, **kwargs):
     if name is None:

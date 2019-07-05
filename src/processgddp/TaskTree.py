@@ -19,6 +19,7 @@ class TaskTree:
         self._taskBlockedby = {}
         self._taskBlocks = {}
         self._dummyTasks = []
+        self.results = {}
         self.timeout = timeout
         self.poolargs = poolargs
 
@@ -69,18 +70,17 @@ class TaskTree:
         Optional args and kwargs passed to task function.
         '''
         self._check_undefined()
-        results = {}
         while len(self):
             if len(self._unblocked):
                 taskId = self._pop()
-                results[taskId] = self._taskFunction[taskId](
+                self.results[taskId] = self._taskFunction[taskId](
                     taskId,
-                    [results[t] for t in self._taskRequirements[taskId]],
+                    [self.results[t] for t in self._taskRequirements[taskId]],
                     *args, **kwargs)
                 self._complete(taskId)
             else:
                 raise Exception("Tasks cannot be unblocked: {}".format(self._blocked))
-        return results
+        return self.results
 
     def build_async(self, *args, **kwargs):
         '''
@@ -94,12 +94,11 @@ class TaskTree:
         pool = multiprocessing.Pool(**self.poolargs)
         completedQueue = multiprocessing.Manager().Queue()
         asyncResults = {}
-        results = {}
         maxTasks = self.poolargs.get('threads') or multiprocessing.cpu_count()
         while len(self):
             if len(self._unblocked) and len(self._inprocess) < maxTasks:
                 taskId = self._pop()
-                reqres = [results[t] for t in self._taskRequirements[taskId]]
+                reqres = [self.results[t] for t in self._taskRequirements[taskId]]
                 asyncResults[taskId] = pool.apply_async(
                     _executer, (completedQueue,
                                 self._taskFunction[taskId],
@@ -117,20 +116,19 @@ class TaskTree:
                 except:
                     raise Exception("Tasks timed out: {}".format(
                         self._inprocess))
-                results[taskId] = asyncResults[taskId].get()
+                self.results[taskId] = asyncResults[taskId].get()
                 self._complete(taskId)
-                logging.debug('completed {}'.format(taskId))
             else:
                 raise Exception("Tasks cannot be unblocked: {}".format(
                     self._blocked))
         pool.close()
-        return results
+        return self.results
 
     def get_undefined_tasks(self):
         '''return required taskIds that are undefined'''
         undefined = []
         for b in self._taskBlocks.keys():
-            if b not in self._taskFunction:
+            if b not in self._taskFunction and b not in self.results:
                 undefined.append(b)
         return undefined
 
@@ -144,6 +142,7 @@ class TaskTree:
 
     def reset(self):
         '''Reset task tree'''
+        self.results = {}
         self._blocked = []
         self._unblocked = []
         self._completed = []
@@ -172,8 +171,21 @@ class TaskTree:
                     self._blocked.remove(b)
                     self._unblocked.append(b)
         self._completed.append(taskId)
-        logging.debug('Completed {} of {}'.format(
-            len(self._completed), len(self) + len(self._completed)))
+        logging.info('Completed {}'.format(taskId))
+
+    def skip_undefined(self):
+        for t in self.get_undefined_tasks():
+            self._skip(t)
+
+    def skip_task(self, taskId):
+        if taskId in self._taskBlocks:
+            for b in self._taskBlocks[taskId]:
+                self._taskBlockedby[b].remove(taskId)
+                if len(self._taskBlockedby[b]) < 1:
+                    self._blocked.remove(b)
+                    self._unblocked.append(b)
+            self._taskBlocks[taskId] = []
+        self.results[taskId] = taskId
 
     def _check_undefined(self):
         undefined = self.get_undefined_tasks()
@@ -188,30 +200,31 @@ def _executer(queue, func, taskId, requires, args, kwargs):
 def _on_error(e):
     raise e
 
+def _make_test(taskId, requires):
+    time.sleep(1)
+    print ('Made {} from {}'.format(taskId, ', '.join(requires)))
+    return "homemade " + taskId
+
+def _get_test(taskId, requires):
+    time.sleep(.5)
+    print ('Got {}'.format(taskId))
+    return taskId
+
+
 def test():
     import time
     tree = TaskTree()
 
-    def get(taskId, requires):
-        time.sleep(.5)
-        print ('Got {}'.format(taskId))
-        return taskId
-
-    def make(taskId, requires):
-        time.sleep(1)
-        print ('Made {} from {}'.format(taskId, ', '.join(requires)))
-        return "homemade " + taskId
-
-    tree.add(make, 'pb&j', ['peanutbutter', 'jelly', 'bread'])
-    tree.add(make, 'peanutbutter', ['peanuts', 'salt'])
-    tree.add(make, 'jelly', ['berries', 'sugar', 'pectin', 'water'])
-    tree.add(make, 'bread', ['flour', 'yeast', 'salt', 'water'])
-    tree.add(make, 'flour', ['wheat'])
+    tree.add(_make_test, 'pb&j', ['peanutbutter', 'jelly', 'bread'])
+    tree.add(_make_test, 'peanutbutter', ['peanuts', 'salt'])
+    tree.add(_make_test, 'jelly', ['berries', 'sugar', 'pectin', 'water'])
+    tree.add(_make_test, 'bread', ['flour', 'yeast', 'salt', 'water'])
+    tree.add(_make_test, 'flour', ['wheat'])
 
     # we still need to define tasks for the rest of the raw ingredients
     for r in tree.get_undefined_tasks():
         # we'll just assume we can get
-        tree.add(get, r)
+        tree.add(_get_test, r)
 
     tree.build()
     tree.reset()
