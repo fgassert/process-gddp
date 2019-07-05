@@ -30,7 +30,10 @@ def countAboveArr(arr):
 def _runs(difs):
     run_starts, = np.where(difs > 0)
     run_ends, = np.where(difs < 0)
-    return (run_ends - run_starts).max()
+    if len(run_starts):
+        return (run_ends - run_starts).max()
+    else:
+        return 0
 
 def maxRun(arr):
     shape = (1, *arr.shape[1:])

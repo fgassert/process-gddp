@@ -75,7 +75,6 @@ class Client:
                             for chunk in r.iter_content(chunk_size=4096):
                                 if chunk:
                                     f.write(chunk)
-                    logging.info('DL finished {}'.format(obj))
                 except SystemExit:
                     logging.info('Exiting gracefully {}'.format(fname))
                     os.remove(fname)
