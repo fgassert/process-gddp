@@ -119,7 +119,7 @@ class TaskTree:
                         self._inprocess))
                 results[taskId] = asyncResults[taskId].get()
                 self._complete(taskId)
-                logging.info('completed {}'.format(taskId))
+                logging.debug('completed {}'.format(taskId))
             else:
                 raise Exception("Tasks cannot be unblocked: {}".format(
                     self._blocked))

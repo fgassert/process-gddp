@@ -33,22 +33,22 @@ class Client:
 
     def objExists(self, obj, nocache=False):
         if not nocache and self.checkCache(obj):
-            logging.info('Found cached {}'.format(obj))
+            logging.debug('Found cached {}'.format(obj))
             return True
         elif len(obj) > 4 and obj[:4]=="http":
             return True
         key = os.path.join(self.prefix, obj)
         try:
             self.client.Bucket(self.bucket).Object(key).load()
-            logging.info('Found remote {}'.format(obj))
+            logging.debug('Found remote {}'.format(obj))
             return True
         except ClientError as e:
-            logging.info('Not found {}'.format(obj))
+            logging.debug('Not found {}'.format(obj))
             return False
 
     def objExists2(self, obj, nocache=False):
         if not nocache and self.checkCache(obj):
-            logging.info('Found cached {}'.format(obj))
+            logging.debug('Found cached {}'.format(obj))
             return True
         elif len(obj) > 4 and obj[:4]=="http":
             return True
@@ -57,9 +57,9 @@ class Client:
             objs = self.client.Bucket(self.bucket).objects.filter(Prefix=self.prefix)
             self.existingObjects = [o.key for o in objs]
         if key in self.existingObjects:
-            logging.info('Found remote {}'.format(obj))
+            logging.debug('Found remote {}'.format(obj))
             return True
-        logging.info('Not found {}'.format(obj))
+        logging.debug('Not found {}'.format(obj))
         return False
 
     def getObj(self, obj, nocache=False):
