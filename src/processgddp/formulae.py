@@ -35,7 +35,7 @@ def _runs(difs):
     else:
         return 0
 
-def maxRun(arr):
+def maxRun2(arr):
     shape = (1, *arr.shape[1:])
     zeros = np.zeros(shape)
     bounded = np.concatenate((zeros, arr, arr, zeros), axis=0)
@@ -43,6 +43,14 @@ def maxRun(arr):
     out = np.empty(shape)
     for i,j in np.ndindex(difs.shape[1:]):
         out[0,i,j] = _runs(difs[:,i,j])
+    return out
+
+def maxRun(arr):
+    out = np.empty((1, *arr.shape[1:]))
+    for i,j in np.ndindex(arr.shape[1:]):
+        bounded = np.concatenate(([0], arr[:,i,j], arr[:,i,j], [0]))
+        difs = np.diff(bounded)
+        out[0,i,j] = _runs(difs)
     return out
 
 def drydays(arr):
