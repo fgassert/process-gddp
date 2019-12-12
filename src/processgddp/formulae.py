@@ -115,6 +115,8 @@ def registerFormulae():
     # extreme values
     dh.registerFormula(dh.Formula, name='gt50mm', requires='src', function='gt50mm')
     dh.registerFormula(dh.Formula, name='gt95f', requires='src', function='gt95f')
+    dh.registerFormula(dh.Formula, name='gt90f', requires='src', function='gt90f')
+    dh.registerFormula(dh.Formula, name='gt85f', requires='src', function='gt85f')
     dh.registerFormula(dh.Formula, name='gt32f', requires='src', function='gt32f')
 
     dh.registerFormula(dh.Formula, name='q99', requires='src', function='q99')
@@ -131,7 +133,7 @@ def registerFormulae():
     # moving averages and ensembles for each indicator
     for indicator in ('annual', 'q98', 'q99', 'gt-q99',
                       'gt-q98', 'gt50mm', 'gt95f', 'gt32f',
-                      'frostfree', 'drydays'
+                      'frostfree', 'drydays', 'gt85f', 'gt90f'
     ):
         ma = 'abs-{}'.format(indicator)
         diff = 'diff-{}'.format(indicator)
