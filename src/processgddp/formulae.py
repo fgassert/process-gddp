@@ -92,6 +92,7 @@ FUNCTIONS = {
     'q99':percentile(99),
     'gt95f':countAbove(f2k(95)),
     'gt90f':countAbove(f2k(90)),
+    'gt85f':countAbove(f2k(85)),
     'gt32f':countAbove(f2k(32)),
     'gt50mm':countAbove(mm2kgs(50)),
     'hdd65f':hdd(f2k(65)),
