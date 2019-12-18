@@ -15,7 +15,7 @@ BUCKET = os.environ.get('GDDP_BUCKET', 'gddp')
 ACCESSKEY = os.environ.get('AWS_ACCESS_KEY_ID')
 SECRETKEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 OPTIONS = {
-    'nocache':False,
+    'nocache':True,
     'bucket':BUCKET,
     'prefix':PREFIX,
     'access_key':ACCESSKEY,
