@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 
-BASELINE='1970-2000'
+BASELINE='1960-1990'
 
 def bandMean(arr):
     return np.nanmean(arr, axis=0, keepdims=True)
@@ -27,7 +27,7 @@ def divideArr(arr):
 def countAboveArr(arr):
     return np.nansum(np.where(arr[:-1]>arr[-1], 1, 0), axis=0, keepdims=True)
 
-def _runs(difs):
+def _maxruns(difs):
     run_starts, = np.where(difs > 0)
     run_ends, = np.where(difs < 0)
     if len(run_starts):
@@ -42,7 +42,7 @@ def maxRun2(arr):
     difs = np.diff(bounded, axis=0)
     out = np.empty(shape)
     for i,j in np.ndindex(difs.shape[1:]):
-        out[0,i,j] = _runs(difs[:,i,j])
+        out[0,i,j] = _maxruns(difs[:,i,j])
     return out
 
 def maxRun(arr):
@@ -50,13 +50,30 @@ def maxRun(arr):
     for i,j in np.ndindex(arr.shape[1:]):
         bounded = np.concatenate(([0], arr[:,i,j], arr[:,i,j], [0]))
         difs = np.diff(bounded)
-        out[0,i,j] = _runs(difs)
+        out[0,i,j] = _maxruns(difs)
+    return out
+
+def _spells(arr, min_length):
+    out = np.empty((1, *arr.shape[1:]))
+    for i,j in np.ndindex(arr.shape[1:]):
+        bounded = np.concatenate(([0], arr[:,i,j], arr[:min_length,i,j], [0]))
+        difs = np.diff(bounded)
+        run_starts, = np.where(difs > 0)
+        run_ends, = np.where(difs < 0)
+        if len(run_starts):
+            run_lengths = run_ends - run_starts
+            out[0,i,j] = run_lengths[run_lengths >= min_length].sum() / min_length
+        else:
+            out[0,i,j] = 0
     return out
 
 def drydays(arr):
     return np.clip(maxRun(arr<mm2kgs(1)), 0, 365)
 def frostfree(arr):
     return np.clip(maxRun(arr>c2k(0)), 0, 365)
+def dryspells(min_length):
+    return lambda arr: _spells(arr<mm2kgs(1), min_length)
+
 
 def wrap(f):
     return lambda arr: f(arr)
@@ -73,6 +90,8 @@ def k2f(k):
     return c2f(k2c(k))
 def c2f(c):
     return c*9/5+32
+def c2f_rel(c):
+    return c*9/5
 
 def mm2kgs(mm):
     return mm/86400
@@ -102,8 +121,10 @@ FUNCTIONS = {
     'mmday':kgs2mm,
     'degc':k2c,
     'degf':k2f,
+    'reldegf':c2f_rel,
     'drydays':drydays,
     'frostfree':frostfree,
+    'dryspells':dryspells(5)
 }
 
 def registerFormulae():
@@ -129,11 +150,19 @@ def registerFormulae():
     # streaks
     dh.registerFormula(dh.Formula, name='drydays', requires='src', function='drydays')
     dh.registerFormula(dh.Formula, name='frostfree', requires='src', function='frostfree')
+    dh.registerFormula(dh.Formula, name='dryspells', requires='src', function='dryspells')
+
+    # tavg (averages in tmin)
+    dh.registerFormula(dh.Formula2, name='tavg-tasmin', requires='annual', function='mean',
+                       requires2=dh.getTemplate(f='annual', v='tasmin'))
+    dh.registerFormula(dh.Formula, name='hdd65f-tasmin', requires='tavg-tasmin', function='hdd65f')
+    dh.registerFormula(dh.Formula, name='cdd65f-tasmin', requires='tavg-tasmin', function='cdd65f')
 
     # moving averages and ensembles for each indicator
     for indicator in ('annual', 'q98', 'q99', 'gt-q99',
                       'gt-q98', 'gt50mm', 'gt95f', 'gt32f',
-                      'frostfree', 'drydays', 'gt85f', 'gt90f'
+                      'frostfree', 'drydays', 'gt85f', 'gt90f',
+                      'hdd65f-tasmin', 'cdd65f-tasmin', 'tavg-tasmin', 'dryspells'
     ):
         ma = 'abs-{}'.format(indicator)
         diff = 'diff-{}'.format(indicator)
@@ -143,7 +172,6 @@ def registerFormulae():
                     requires2=dh.getTemplate(f=ma, s='historical', y=BASELINE))
         dh.registerFormula(dh.Formula2, ch, ma, 'div',
                     requires2=dh.getTemplate(f=ma, s='historical', y=BASELINE))
-        for stat in ['mean', 'q25', 'q75', 'q50']:
-            dh.registerFormula(dh.EnsembleFormula, "{}-{}".format(stat, ma), requires=ma, function=stat)
-            dh.registerFormula(dh.EnsembleFormula, "{}-{}".format(stat, diff), requires=diff, function=stat)
-            dh.registerFormula(dh.EnsembleFormula, "{}-{}".format(stat, ch), requires=ch, function=stat)
+        for series in [ma, diff, ch]:
+            for stat in ['mean', 'q25', 'q75', 'q50']:
+                dh.registerFormula(dh.EnsembleFormula, "{}-{}".format(stat, series), requires=series, function=stat)

@@ -176,7 +176,10 @@ class TimeFormula(Formula):
     def __repr__(self):
         return getTemplate(self.name, y="{startYear}-{endYear}")
     def requires(self, v, s, m, y):
-        y1, y2 = y.split('-')
+        try:
+            y1, y2 = y.split('-')
+        except ValueError:
+            raise Exception(f'Timeseries year must be of format "<start>-<end>", got "{y}"')
         return [
             keyName(self._requires, v, SCENARIOS[0], m, i)
             if i < PROJYEAR else
