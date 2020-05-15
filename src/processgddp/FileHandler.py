@@ -69,7 +69,7 @@ class Client:
             fname = self.cached(os.path.basename(obj))
         else:
             fname = self.cached(obj)
-        tmpname = hash(fname)
+        tmpname = self.cached(str(hash(fname)))
 
         TIMEOUT = 360
         if os.path.isfile(tmpname):
