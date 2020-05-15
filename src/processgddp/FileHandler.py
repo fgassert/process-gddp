@@ -71,15 +71,15 @@ class Client:
             fname = self.cached(obj)
         tmpname = hash(fname)
 
-        TIMEOUT = 3600
+        TIMEOUT = 360
         if os.path.isfile(tmpname):
-            logging.info("File download in process")
+            logging.info("File download in process.")
             wait = 0
             while os.path.isfile(tmpname):
                 time.sleep(1)
                 wait += 1
                 if wait > TIMEOUT:
-                    logging.error("Was waiting for {fname}, but timed out.")
+                    logging.error(f"Was waiting for {fname}, but timed out.")
                     try:
                         os.remove(tmpname)
                     except:
