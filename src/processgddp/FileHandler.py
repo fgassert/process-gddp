@@ -4,7 +4,7 @@ import boto3
 import os
 import logging
 import signal
-import requests
+import urllib
 import time
 
 
@@ -89,20 +89,17 @@ class Client:
             logging.info("Fetching {}".format (obj))
             try:
                 if isHttp:
-                    session = requests.session()
-                    with session.get(obj, stream=True) as r:
-                        r.raise_for_status()
-                        with open(tmpname, 'wb') as f:
-                            for chunk in r.iter_content(chunk_size=4096):
-                                if chunk:
-                                    f.write(chunk)
+                    urllib.request.urlretrieve(obj, tmpname)
                 else:
                     objpath = os.path.join(self.prefix, obj)
                     self.client.Bucket(self.bucket).download_file(objpath, tmpname)
                 os.rename(tmpname, fname)
             except SystemExit:
                 logging.info('Exiting gracefully {}'.format(fname))
-                os.remove(tmpname)
+                try:
+                    os.remove(tmpname)
+                except:
+                    pass
         return fname
 
     def putObj(self, fname, obj):
