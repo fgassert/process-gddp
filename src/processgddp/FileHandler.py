@@ -5,6 +5,7 @@ import os
 import logging
 import signal
 import requests
+import time
 
 
 def terminate(signum, frame):
@@ -63,35 +64,45 @@ class Client:
         return False
 
     def getObj(self, obj, nocache=False):
-        if len(obj) > 4 and obj[:4]=="http":
+        isHttp = (len(obj) > 4 and obj[:4]=="http")
+        if isHttp:
             fname = self.cached(os.path.basename(obj))
-            if nocache or not os.path.isfile(fname):
-                logging.info("Fetching {}".format (obj))
-                try:
+        else:
+            fname = self.cached(obj)
+        tmpname = hash(fname)
+
+        TIMEOUT = 3600
+        if os.path.isfile(tmpname):
+            logging.info("File download in process")
+            wait = 0
+            while os.path.isfile(tmpname):
+                time.sleep(1)
+                wait += 1
+                if wait > TIMEOUT:
+                    logging.error("Was waiting for {fname}, but timed out.")
+                    try:
+                        os.remove(tmpname)
+                    except:
+                        pass
+
+        if not os.path.isfile(fname):
+            logging.info("Fetching {}".format (obj))
+            try:
+                if isHttp:
                     session = requests.session()
                     with session.get(obj, stream=True) as r:
                         r.raise_for_status()
-                        with open(fname, 'wb') as f:
+                        with open(tmpname, 'wb') as f:
                             for chunk in r.iter_content(chunk_size=4096):
                                 if chunk:
                                     f.write(chunk)
-                except SystemExit:
-                    logging.info('Exiting gracefully {}'.format(fname))
-                    os.remove(fname)
-            else:
-                logging.info("Using cached {}".format(obj))
-        else:
-            fname = self.cached(obj)
-            if nocache or not os.path.isfile(fname):
-                logging.info("Fetching {}".format (obj))
-                objpath = os.path.join(self.prefix, obj)
-                try:
-                    self.client.Bucket(self.bucket).download_file(objpath, fname)
-                except SystemExit:
-                    logging.info('Exiting gracefully {}'.format(fname))
-                    os.remove(fname)
-            else:
-                logging.info("Using cached {}".format(obj))
+                else:
+                    objpath = os.path.join(self.prefix, obj)
+                    self.client.Bucket(self.bucket).download_file(objpath, tmpname)
+                os.rename(tmpname, fname)
+            except SystemExit:
+                logging.info('Exiting gracefully {}'.format(fname))
+                os.remove(tmpname)
         return fname
 
     def putObj(self, fname, obj):
