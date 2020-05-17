@@ -6,7 +6,7 @@ import logging
 import signal
 import urllib
 import time
-import random()
+import random
 from pathlib import Path
 
 
