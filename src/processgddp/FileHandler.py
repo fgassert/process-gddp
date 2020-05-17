@@ -6,6 +6,8 @@ import logging
 import signal
 import urllib
 import time
+import random()
+from pathlib import Path
 
 
 def terminate(signum, frame):
@@ -71,7 +73,7 @@ class Client:
             fname = self.cached(obj)
         tmpname = self.cached(str(hash(fname)))
 
-        TIMEOUT = 360
+        TIMEOUT = 3600
         if os.path.isfile(tmpname):
             logging.info("File download in process.")
             wait = 0
@@ -87,6 +89,7 @@ class Client:
 
         if not os.path.isfile(fname):
             logging.info("Fetching {}".format (obj))
+            Path(tmpname).touch()
             try:
                 if isHttp:
                     urllib.request.urlretrieve(obj, tmpname)
