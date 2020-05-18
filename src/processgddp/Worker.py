@@ -31,6 +31,7 @@ def worker(yields, requires, function=None, options={}, dryrun=False):
 
     if nocache:
         client.cleanObjs(requires)
+        client.cleanObjs(yields)
 
     return yields
 
