@@ -108,14 +108,20 @@ class Client:
     def putObj(self, fname, obj):
         logging.info("Putting {}".format(obj))
         objpath = os.path.join(self.prefix, obj)
-        self.client.Bucket(self.bucket).upload_file(fname, objpath)
+        try:
+            self.client.Bucket(self.bucket).upload_file(fname, objpath)
+        except SystemExit:
+            try:
+                self.client.Bucket(self.bucket).Object(objpath).delete()
+            except:
+                pass
 
     def cleanObjs(self, objs):
         if type(objs) not in (list, tuple):
             objs = [objs]
         for o in objs:
             try:
-                fname = self.cached(obj)
+                fname = self.cached(o)
                 os.remove(fname)
                 logging.info("Cleaning {}".format(o))
             except:
@@ -125,6 +131,14 @@ class Client:
         if os.path.isfile(self.cachedir):
             for f in os.listdir():
                 os.remove(f)
+
+    def cleanInvalidBucketObjs(self):
+        objs = self.client.Bucket(self.bucket).objects.filter(Prefix=self.prefix)
+        for o in objs:
+            if o.size == 0:
+                logging.info(f'{o.key} was empty, deleting')
+                o.delete()
+
 
     def cached(self, obj):
         return os.path.join(self.cachedir, obj)

@@ -35,6 +35,7 @@ def build(objs, skipExisting=True, options=OPTIONS, poolargs={}):
 def build_async(objs, skipExisting=True, options=OPTIONS, poolargs={}):
     '''executes the formulae for each key in parallel'''
     client = FileHandler.Client(**options)
+    client.cleanInvalidBucketObjs()
     tree = DependencyHandler.dependencyTree(objs, client, skipExisting, poolargs)
     return tree.build_async(options=options)
 
