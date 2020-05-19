@@ -67,8 +67,7 @@ class Client:
 
     def getObj(self, obj, nocache=False):
         isHttp = (len(obj) > 4 and obj[:4]=="http")
-        if isHttp:
-            fname = os.path.basename(obj)
+        fname = os.path.basename(obj) if isHttp else obj
         if nocache:
             fname = str(hash(random.random())) + fname
         fname = self.cached(obj)
