@@ -22,7 +22,7 @@ def worker(yields, requires, function=None, options={}, dryrun=False):
 
     arr, profile = getData(requires, client, nocache)
 
-    logging.info('Processing {}'.format(yields))
+    logging.debug('Processing {}'.format(yields))
     arr = FUNCTIONS[function](arr)
 
     fname = client.cached(yields)
@@ -55,7 +55,7 @@ def _writeTiff(arr, outfile, profile):
         with rio.open(outfile, 'w', **profile) as dst:
             dst.write(arr.astype(profile['dtype']))
     except (SystemExit, KeyboardInterrupt):
-        logging.info('Exiting gracefully {}'.format(outfile))
+        logging.debug('Exiting gracefully {}'.format(outfile))
         os.remove(outfile)
     return outfile
 

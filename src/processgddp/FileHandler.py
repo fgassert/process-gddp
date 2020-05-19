@@ -71,11 +71,13 @@ class Client:
             fname = self.cached(os.path.basename(obj))
         else:
             fname = self.cached(obj)
+        if nocache:
+            fname = str(hash(random.random()))+fname
         tmpname = self.cached(str(hash(fname)))
 
         TIMEOUT = 3600
         if os.path.isfile(tmpname):
-            logging.info("File download in process.")
+            logging.debug("File download in process.")
             wait = 0
             while os.path.isfile(tmpname):
                 time.sleep(1)
@@ -88,7 +90,7 @@ class Client:
                         pass
 
         if not os.path.isfile(fname):
-            logging.info("Fetching {}".format (obj))
+            logging.debug("Fetching {}".format (obj))
             Path(tmpname).touch()
             try:
                 if isHttp:
@@ -98,7 +100,7 @@ class Client:
                     self.client.Bucket(self.bucket).download_file(objpath, tmpname)
                 os.rename(tmpname, fname)
             except SystemExit:
-                logging.info('Exiting gracefully {}'.format(fname))
+                logging.debug('Exiting gracefully {}'.format(fname))
                 try:
                     os.remove(tmpname)
                 except:
@@ -106,7 +108,7 @@ class Client:
         return fname
 
     def putObj(self, fname, obj):
-        logging.info("Putting {}".format(obj))
+        logging.debug("Putting {}".format(obj))
         objpath = os.path.join(self.prefix, obj)
         try:
             self.client.Bucket(self.bucket).upload_file(fname, objpath)
@@ -123,7 +125,7 @@ class Client:
             try:
                 fname = self.cached(o)
                 os.remove(fname)
-                logging.info("Cleaning {}".format(o))
+                logging.debug("Cleaning {}".format(o))
             except:
                 pass
 
