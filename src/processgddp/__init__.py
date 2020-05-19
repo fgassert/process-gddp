@@ -10,10 +10,10 @@ from . import formulae
 
 formulae.registerFormulae()
 
-PREFIX = os.environ.get('GDDP_PREFIX', 'gddp')
-BUCKET = os.environ.get('GDDP_BUCKET', 'gddp')
-ACCESSKEY = os.environ.get('AWS_ACCESS_KEY_ID')
-SECRETKEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+PREFIX = os.getenv('GDDP_PREFIX', 'gddp')
+BUCKET = os.getenv('GDDP_BUCKET', 'gddp')
+ACCESSKEY = os.getenv('AWS_ACCESS_KEY_ID') or os.getenv('AWS_KEY')
+SECRETKEY = os.getenv('AWS_SECRET_ACCESS_KEY') or os.getenv('AWS_SECRET')
 OPTIONS = {
     'nocache':True,
     'bucket':BUCKET,

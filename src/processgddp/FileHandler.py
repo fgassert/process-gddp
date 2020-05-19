@@ -88,7 +88,7 @@ class Client:
                         pass
 
         if not os.path.isfile(fname):
-            logging.debug("Fetching {}".format (obj))
+            logging.debug("Fetching {}".format(obj))
             Path(tmpname).touch()
             try:
                 if isHttp:
