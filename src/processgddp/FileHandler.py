@@ -70,7 +70,7 @@ class Client:
         fname = os.path.basename(obj) if isHttp else obj
         if nocache:
             fname = str(hash(random.random())) + fname
-        fname = self.cached(obj)
+        fname = self.cached(fname)
         tmpname = self.cached(str(hash(fname)))
 
         TIMEOUT = 3600
