@@ -68,11 +68,10 @@ class Client:
     def getObj(self, obj, nocache=False):
         isHttp = (len(obj) > 4 and obj[:4]=="http")
         if isHttp:
-            fname = self.cached(os.path.basename(obj))
-        else:
-            fname = self.cached(obj)
+            obj = os.path.basename(obj)
         if nocache:
-            fname = str(hash(random.random()))+fname
+            obj = str(hash(random.random()))+obj
+        fname = self.cached(obj)
         tmpname = self.cached(str(hash(fname)))
 
         TIMEOUT = 3600
