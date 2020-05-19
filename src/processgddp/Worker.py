@@ -30,7 +30,6 @@ def worker(yields, requires, function=None, options={}, dryrun=False):
     client.putObj(fname, yields)
 
     if nocache:
-        client.cleanObjs(requires)
         client.cleanObjs(yields)
 
     return yields
@@ -46,6 +45,8 @@ def getData(requires, client, nocache=NOCACHE):
         else:
             arr2, _ = read(fname)
             arr = np.concatenate((arr, arr2), axis=0)
+        if nocache:
+            client.cleanObjs(fname)
     return arr, profile
 
 def _writeTiff(arr, outfile, profile):
