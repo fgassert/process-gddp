@@ -3,7 +3,7 @@ import logging
 import time
 
 class TaskTree:
-    def __init__(self, timeout=6000, **poolargs):
+    def __init__(self, timeout=300, **poolargs):
         '''
         Class for executing a tree of tasks asyncronously.
 
@@ -111,11 +111,18 @@ class TaskTree:
                 logging.info('inprocess: {}, unblocked: {}, blocked: {}, completed: {}'.format(
                     len(self._inprocess), len(self._unblocked), len(self._blocked), len(self._completed)
                 ))
-                try:
-                    taskId = completedQueue.get(timeout=self.timeout)
-                except:
-                    raise Exception("Tasks timed out: {}".format(
-                        self._inprocess))
+                
+                taskId = None
+                t = 0
+                while taskId = None:
+                    t += 1
+                    try:
+                        taskId = completedQueue.get(timeout=1)
+                    except:
+                        pass
+                    if t > self.timeout:
+                        raise Exception("Tasks timed out: {}".format(
+                            self._inprocess))
                 self.results[taskId] = asyncResults[taskId].get()
                 self._complete(taskId)
             else:
