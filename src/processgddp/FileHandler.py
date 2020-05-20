@@ -121,7 +121,7 @@ class Client:
             objs = [objs]
         for o in objs:
             try:
-                os.remove(fname)
+                os.remove(o)
                 logging.debug("Cleaning {}".format(o))
             except:
                 pass
