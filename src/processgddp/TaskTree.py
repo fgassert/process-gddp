@@ -1,9 +1,10 @@
 import multiprocessing
 import logging
 import time
+import queue
 
 class TaskTree:
-    def __init__(self, timeout=300, **poolargs):
+    def __init__(self, timeout=3000, **poolargs):
         '''
         Class for executing a tree of tasks asyncronously.
 
@@ -111,18 +112,11 @@ class TaskTree:
                 logging.info('inprocess: {}, unblocked: {}, blocked: {}, completed: {}'.format(
                     len(self._inprocess), len(self._unblocked), len(self._blocked), len(self._completed)
                 ))
-                
-                taskId = None
-                t = 0
-                while taskId == None:
-                    t += 1
-                    try:
-                        taskId = completedQueue.get(timeout=1)
-                    except:
-                        pass
-                    if t > self.timeout:
-                        raise Exception("Tasks timed out: {}".format(
-                            self._inprocess))
+                try:
+                    taskId = completedQueue.get(timeout=self.timeout)
+                except queue.Empty:
+                    raise Exception("Tasks timed out: {}".format(
+                        self._inprocess))
                 self.results[taskId] = asyncResults[taskId].get()
                 self._complete(taskId)
             else:
