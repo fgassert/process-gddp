@@ -114,7 +114,7 @@ class TaskTree:
                 
                 taskId = None
                 t = 0
-                while taskId = None:
+                while taskId == None:
                     t += 1
                     try:
                         taskId = completedQueue.get(timeout=1)
