@@ -121,7 +121,6 @@ class Client:
             objs = [objs]
         for o in objs:
             try:
-                fname = self.cached(o)
                 os.remove(fname)
                 logging.debug("Cleaning {}".format(o))
             except:

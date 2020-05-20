@@ -30,7 +30,7 @@ def worker(yields, requires, function=None, options={}, dryrun=False):
     client.putObj(fname, yields)
 
     if nocache:
-        client.cleanObjs(yields)
+        client.cleanObjs(fname)
 
     return yields
 
