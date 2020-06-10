@@ -110,12 +110,10 @@ class Client:
         objpath = os.path.join(self.prefix, obj)
         try:
             self.client.Bucket(self.bucket).upload_file(fname, objpath)
-        except SystemExit:
-            try:
-                self.client.Bucket(self.bucket).Object(objpath).delete()
-            except:
-                pass
-
+        except:
+            self.client.Bucket(self.bucket).Object(objpath).delete()
+            logging.info(f'Putting {objpath} failed.')
+            
     def cleanObjs(self, objs):
         if type(objs) not in (list, tuple):
             objs = [objs]
