@@ -5,6 +5,7 @@ import urllib
 import logging
 
 from . import FileHandler
+from . import DependencyHandler
 from .formulae import FUNCTIONS
 
 NOCACHE = False
@@ -17,10 +18,10 @@ def worker(yields, requires, function=None, options={}, dryrun=False):
     if function is None:
         raise Exception('Function not defined')
     nocache = options.get('nocache', NOCACHE)
-    strict = options.get('strict', STRICT)
+    dataset = DependencyHandler.parseKey(yields)['d']
     client = FileHandler.Client(**options)
 
-    arr, profile = getData(requires, client, nocache)
+    arr, profile = getData(requires, client, dataset, nocache)
 
     logging.debug('Processing {}'.format(yields))
     arr = FUNCTIONS[function](arr)
@@ -34,16 +35,16 @@ def worker(yields, requires, function=None, options={}, dryrun=False):
 
     return yields
 
-def getData(requires, client, nocache=NOCACHE):
+def getData(requires, client, dataset, nocache=NOCACHE):
     arr = None
     if type(requires) not in (list, tuple):
         requires = [requires]
     for r in requires:
         fname = client.getObj(r, nocache=nocache)
         if arr is None:
-            arr, profile = read(fname)
+            arr, profile = read(fname, dataset)
         else:
-            arr2, _ = read(fname)
+            arr2, _ = read(fname, dataset)
             arr = np.concatenate((arr, arr2), axis=0)
         if nocache:
             client.cleanObjs(fname)
@@ -63,21 +64,23 @@ def _writeTiff(arr, outfile, profile):
 def write(arr, outfile, profile):
     return _writeTiff(arr, outfile, profile)
 
-def _readNC(infile):
+def _readNC(infile, dataset):
     with rio.open(infile) as src:
         arr = src.read()
         profile = src.profile
-        t,h,w = arr.shape
 
-        # No Data
-        arr[arr==profile['nodata']] = np.nan
-        # Roll x-axis for 180W origin
-        arr = np.roll(arr, int(w/2), axis=2)
-        # Set scale to .25 and origin to 90S,180W
-        profile.update({
-            "transform":rio.Affine(360.0/w,0,-180,0,-180.0/h,90),
-            "crs":"EPSG:4326"
-        })
+        # Reshape NEXGDDP raster
+        if dataset == DependencyHandler.NEXGDDP:
+            _,h,w = arr.shape
+            # No Data
+            arr[arr==profile['nodata']] = np.nan
+            # Roll x-axis for 180W origin
+            arr = np.roll(arr, int(w/2), axis=2)
+            # Set scale to .25 and origin to 90S,180W
+            profile.update({
+                "transform":rio.Affine(360.0/w,0,-180,0,-180.0/h,90),
+                "crs":"EPSG:4326"
+            })
         return arr, profile
 
 def _readTiff(infile):
@@ -88,8 +91,8 @@ def _readTiff(infile):
             arr[arr==profile['nodata']] = np.nan
         return arr, profile
 
-def read(infile):
-    if len(infile)>3 and infile[-3:]=='.nc':
-        return _readNC(infile)
+def read(infile, dataset):
+    if os.path.splitext(infile)[-1] == '.nc':
+        return _readNC(infile, dataset)
     else:
         return _readTiff(infile)

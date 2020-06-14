@@ -32,7 +32,7 @@ startyear = 2000
 endyear = 2080
 
 def raster_template(e, ch, i, s, y1, y2):
-    return f'{e}-{ch}-{i}_{s}_ens_{y1}-{y2}.tif'
+    return f'{e}-{ch}-{i}_{s}_ens_{y1}-{y2}_loca.tif'
 
 def url_template(rast):
     return f'https://s3.amazonaws.com/md.cc/tmp/nex-gddp/{rast}'

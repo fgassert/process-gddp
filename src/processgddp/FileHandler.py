@@ -30,22 +30,25 @@ class Client:
         self.existingObjects = []
 
     def checkCache(self, obj):
-        if len(obj) > 4 and obj[:4]=="http":
+        if self._isUrl(obj):
             obj = os.path.basename(obj)
         return os.path.isfile(self.cached(obj))
+
+    def _isUrl(self, obj):
+        return obj.split(':')[0] in ("http", "https", "ftp", "ftps")
 
     def objExists(self, obj, nocache=False):
         if not nocache and self.checkCache(obj):
             logging.debug('Found cached {}'.format(obj))
             return True
-        elif len(obj) > 4 and obj[:4]=="http":
+        elif self._isUrl(obj):
             return True
         key = os.path.join(self.prefix, obj)
         try:
             self.client.Bucket(self.bucket).Object(key).load()
             logging.debug('Found remote {}'.format(obj))
             return True
-        except ClientError as e:
+        except:
             logging.debug('Not found {}'.format(obj))
             return False
 
@@ -53,7 +56,7 @@ class Client:
         if not nocache and self.checkCache(obj):
             logging.debug('Found cached {}'.format(obj))
             return True
-        elif len(obj) > 4 and obj[:4]=="http":
+        elif self._isUrl(obj):
             return True
         key = os.path.join(self.prefix, obj)
         if not self.existingObjects:
@@ -66,8 +69,8 @@ class Client:
         return False
 
     def getObj(self, obj, nocache=False):
-        isHttp = (len(obj) > 4 and obj[:4]=="http")
-        fname = os.path.basename(obj) if isHttp else obj
+        isUrl = self._isUrl(obj)
+        fname = os.path.basename(obj) if isUrl else obj
         if nocache:
             fname = str(hash(random.random())) + fname
         fname = self.cached(fname)
@@ -91,7 +94,7 @@ class Client:
             logging.debug("Fetching {}".format(obj))
             Path(tmpname).touch()
             try:
-                if isHttp:
+                if isUrl:
                     urllib.request.urlretrieve(obj, tmpname)
                 else:
                     objpath = os.path.join(self.prefix, obj)
