@@ -95,7 +95,7 @@ class Client:
             Path(tmpname).touch()
             try:
                 if isUrl:
-                    urllib.request.urlretrieve(obj, tmpname)
+                    self._download(obj, tmpname)
                 else:
                     objpath = os.path.join(self.prefix, obj)
                     self.client.Bucket(self.bucket).download_file(objpath, tmpname)
@@ -116,7 +116,20 @@ class Client:
         except:
             self.client.Bucket(self.bucket).Object(objpath).delete()
             logging.info(f'Putting {objpath} failed.')
-            
+    
+    def _download(self, url, dest, retries=5):
+        try:
+            urllib.request.urlretrieve(url, dst)
+        except Exception as e:
+            if retries>0:
+                logging.debug('Download failed, retrying')
+                time.sleep(5)
+                self._download(url, dest, retries-1)
+            else:
+                logging.error(f'Download of {url} failed.')
+                raise(e)
+
+
     def cleanObjs(self, objs):
         if type(objs) not in (list, tuple):
             objs = [objs]

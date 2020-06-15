@@ -176,7 +176,7 @@ class TaskTree:
 
     def skip_undefined(self):
         for t in self.get_undefined_tasks():
-            self._skip(t)
+            self.skip_task(t)
 
     def skip_task(self, taskId):
         if taskId in self._taskBlocks:
