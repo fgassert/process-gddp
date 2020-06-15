@@ -75,10 +75,18 @@ MODELS = {
         'inmcm4'
     ]
 }
-MODEL_MEMBERS = {
-    'CCSM4': 'r6i1p1',
-    'GISS-E2-H': 'r6i1p1',
-    'GISS-E2-R': 'r6i1p1',
+MODEL_SCENARIO_MEMBERS = {
+    ('CCSM4', 'historical'): 'r6i1p1',
+    ('CCSM4', 'rcp45'): 'r6i1p1',
+    ('CCSM4', 'rcp85'): 'r6i1p1',
+    ('EC-EARTH', 'rcp45'): 'r8i1p1',
+    ('EC-EARTH', 'rcp85'): 'r2i1p1',
+    ('GISS-E2-H', 'historical'): 'r6i1p1',
+    ('GISS-E2-H', 'rcp45'): 'r6i1p3',
+    ('GISS-E2-H', 'rcp85'): 'r2i1p1',
+    ('GISS-E2-R', 'historical'): 'r6i1p1',
+    ('GISS-E2-R', 'rcp45'): 'r6i1p1',
+    ('GISS-E2-R', 'rcp85'): 'r2i1p1'
 }
 ENSEMBLE = 'ens'
 SOURCEDATA = 'src'
@@ -107,8 +115,8 @@ def srcName(v, s, m, y, d=NEXGDDP):
         'year': str(y)
     }
     if d == LOCA:
-        if m in MODEL_MEMBERS:
-            args['member'] = MODEL_MEMBERS[m]
+        if (m, s) in MODEL_SCENARIO_MEMBERS:
+            args['member'] = MODEL_SCENARIO_MEMBERS[(m, s)]
         else:
             args['member'] = 'r1i1p1'
     return SRCTEMPLATES[d].format(**args)
