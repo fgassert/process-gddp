@@ -119,7 +119,7 @@ class Client:
     
     def _download(self, url, dest, retries=5):
         try:
-            urllib.request.urlretrieve(url, dst)
+            urllib.request.urlretrieve(url, dest)
         except Exception as e:
             if retries>0:
                 logging.debug('Download failed, retrying')
