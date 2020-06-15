@@ -9,7 +9,7 @@ NEXGDDP = 'nexgddp'
 LOCA = 'loca'
 SRCTEMPLATES = {
     NEXGDDP: "http://nasanex.s3.amazonaws.com/NEX-GDDP/BCSD/{scenario}/day/atmos/{variable}/r1i1p1/v1.0/{variable}_day_BCSD_{scenario}_r1i1p1_{model}_{year}.nc",
-    LOCA: "ftp://gdo-dcp.ucllnl.org/pub/dcp/archive/cmip5/loca/LOCA_2016-04-02/{model}/16th/{scenario}/r1i1p1/{variable}/{variable}_day_{model}_{scenario}_r1i1p1_{year}0101-{year}1231.LOCA_2016-04-02.16th.nc"
+    LOCA: "ftp://gdo-dcp.ucllnl.org/pub/dcp/archive/cmip5/loca/LOCA_2016-04-02/{model}/16th/{scenario}/{member}/{variable}/{variable}_day_{model}_{scenario}_{member}_{year}0101-{year}1231.LOCA_2016-04-02.16th.nc"
 }
 
 FILETEMPLATE = "{function}_{variable}_{scenario}_{model}_{year}_{dataset}.tif"
@@ -75,6 +75,11 @@ MODELS = {
         'inmcm4'
     ]
 }
+MODEL_MEMBERS = {
+    'CCSM4': 'r6i1p1',
+    'GISS-E2-H': 'r6i1p1',
+    'GISS-E2-R': 'r6i1p1',
+}
 ENSEMBLE = 'ens'
 SOURCEDATA = 'src'
 STARTYEAR = 1950
@@ -95,8 +100,18 @@ def keyName(f, v, s, m, y, d=NEXGDDP):
         function=f, variable=v, scenario=s, model=m, year=str(y), dataset=d)
 
 def srcName(v, s, m, y, d=NEXGDDP):
-    return SRCTEMPLATES[d].format(
-        variable=v, scenario=s, model=m, year=str(y))
+    args = {
+        'variable': v, 
+        'scenario': s, 
+        'model': m, 
+        'year': str(y)
+    }
+    if d == LOCA:
+        if m in MODEL_MEMBERS:
+            args['member'] = MODEL_MEMBERS[m]
+        else:
+            args['member'] = 'r1i1p1'
+    return SRCTEMPLATES[d].format(**args)
 
 def validateKey(key):
     vals = parseKey(key)
