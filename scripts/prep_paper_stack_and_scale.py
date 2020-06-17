@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 import rasterio as rio
 from rasterio import plot, mask
@@ -28,8 +29,8 @@ def stack_and_scale(ch, i, s, y):
     for e in ['q25', 'q50', 'q75']:
         rast = raster_template(e, ch, i, s, y1, y2)
         url = url_template(rast)
+        print(f' reading {url}')
         with rio.open(url, 'r') as src:
-            print(f' reading {url}')
             _arr = src.read()
             if arr is None:
                 arr = _arr

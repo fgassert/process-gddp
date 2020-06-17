@@ -243,9 +243,12 @@ class Formula2(Formula):
             y1, y2 = y.split('-')
             if int(y1) < PROJYEAR and int(y2) < PROJYEAR:
                 s = SCENARIOS[0]
+        args = {'v': v, 's': s, 'm': m, 'y': y, 'd': d}
+        args2 = args.copy()
+        args2.update(self._requires2)
         return [
-            keyName(self._requires, v, s, m, y, d),
-            self._requires2.format(variable=v, scenario=s, model=m, year=y, dataset=d)
+            keyName(self._requires, **args),
+            keyName(**args2)
         ]
 
 class TimeFormula(Formula):
