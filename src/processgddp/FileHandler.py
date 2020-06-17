@@ -94,11 +94,7 @@ class Client:
             logging.debug("Fetching {}".format(obj))
             Path(tmpname).touch()
             try:
-                if isUrl:
-                    self._download(obj, tmpname)
-                else:
-                    objpath = os.path.join(self.prefix, obj)
-                    self.client.Bucket(self.bucket).download_file(objpath, tmpname)
+                self._download(obj, tmpname)
                 os.rename(tmpname, fname)
             except SystemExit:
                 logging.debug('Exiting gracefully {}'.format(fname))
@@ -119,7 +115,11 @@ class Client:
     
     def _download(self, url, dest, retries=5):
         try:
-            urllib.request.urlretrieve(url, dest)
+            if self._isUrl(url):
+                urllib.request.urlretrieve(url, dest)
+            else:
+                objpath = os.path.join(self.prefix, url)
+                self.client.Bucket(self.bucket).download_file(objpath, dest)
         except Exception as e:
             if retries>0:
                 logging.debug('Download failed, retrying')

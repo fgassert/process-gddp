@@ -182,4 +182,4 @@ def registerFormulae():
             for stat in ['mean', 'q25', 'q75', 'q50']:
                 dh.registerFormula(dh.EnsembleFormula, "{}-{}".format(stat, series), requires=series, function=stat)
             dh.registerFormula(dh.Formula2, f"iqr-{series}", requires=f"q75-{series}", function='sub',
-                               requires2={'f':f'q25-{series}'})
+                               requires2={'f': f'q25-{series}'})
