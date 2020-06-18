@@ -15,6 +15,8 @@ def countAbove(v):
 def scale(s):
     return lambda arr: arr*s
 
+def dailymean(arr):
+    return (arr[:arr.shape[0]//2] + arr[arr.shape[0]//2:]) / 2
 def hdd(v):
     return lambda arr: np.nansum(np.where(arr>v, arr-v, 0), axis=0, keepdims=True)
 def cdd(v):
@@ -26,6 +28,7 @@ def divideArr(arr):
     return arr[:-1]/arr[-1]
 def countAboveArr(arr):
     return np.nansum(np.where(arr[:-1]>arr[-1], 1, 0), axis=0, keepdims=True)
+
 
 def _maxruns(difs):
     run_starts, = np.where(difs > 0)
@@ -114,6 +117,7 @@ FUNCTIONS = {
     'gt85f':countAbove(f2k(85)),
     'gt32f':countAbove(f2k(32)),
     'gt50mm':countAbove(mm2kgs(50)),
+    'dailymean':dailymean,
     'hdd65f':hdd(f2k(65)),
     'cdd65f':cdd(f2k(65)),
     'hdd16c':hdd(c2k(16)),
@@ -142,10 +146,10 @@ def registerFormulae():
 
     dh.registerFormula(dh.Formula, name='q99', requires='src', function='q99')
     dh.registerFormula(dh.Formula2, name='gt-q99', requires='src', function='gt',
-                      requires2=dh.getTemplate(f='abs-q99', s='historical', y=BASELINE))
+                      requires2={'f':'abs-q99', 's':'historical', 'y':BASELINE})
     dh.registerFormula(dh.Formula, name='q98', requires='src', function='q98')
     dh.registerFormula(dh.Formula2, name='gt-q98', requires='src', function='gt',
-                      requires2=dh.getTemplate(f='abs-q98', s='historical', y=BASELINE))
+                      requires2={'f':'abs-q98', 's':'historical', 'y':BASELINE})
 
     # streaks
     dh.registerFormula(dh.Formula, name='drydays', requires='src', function='drydays')
@@ -154,9 +158,11 @@ def registerFormulae():
 
     # tavg (averages in tmin)
     dh.registerFormula(dh.Formula2, name='tavg-tasmin', requires='annual', function='mean',
-                       requires2=dh.getTemplate(f='annual', v='tasmin'))
-    dh.registerFormula(dh.Formula, name='hdd65f-tasmin', requires='tavg-tasmin', function='hdd65f')
-    dh.registerFormula(dh.Formula, name='cdd65f-tasmin', requires='tavg-tasmin', function='cdd65f')
+                       requires2={'f':'annual', 'v':'tasmin'})
+    dh.registerFormula(dh.Formula2, name='daily-tavg-tasmin', requires='src', function='dailymean',
+                       requires2={'f':'src', 'v':'tasmin'})
+    dh.registerFormula(dh.Formula, name='hdd65f-tasmin', requires='daily-tavg-tasmin', function='hdd65f')
+    dh.registerFormula(dh.Formula, name='cdd65f-tasmin', requires='daily-tavg-tasmin', function='cdd65f')
 
     # moving averages and ensembles for each indicator
     for indicator in ('annual', 'q98', 'q99', 'gt-q99',
@@ -169,11 +175,11 @@ def registerFormulae():
         ch = 'ch-{}'.format(indicator)
         dh.registerFormula(dh.TimeFormula, ma, indicator, 'mean')
         dh.registerFormula(dh.Formula2, diff, ma, 'sub',
-                    requires2=dh.getTemplate(f=ma, s='historical', y=BASELINE))
+                    requires2={'f':ma, 's':'historical', 'y':BASELINE})
         dh.registerFormula(dh.Formula2, ch, ma, 'div',
-                    requires2=dh.getTemplate(f=ma, s='historical', y=BASELINE))
+                    requires2={'f':ma, 's':'historical', 'y':BASELINE})
         for series in [ma, diff, ch]:
             for stat in ['mean', 'q25', 'q75', 'q50']:
                 dh.registerFormula(dh.EnsembleFormula, "{}-{}".format(stat, series), requires=series, function=stat)
-            dh.registerFormula(dh.Formula2, f"iqr-{series}", requires=f"q75-{series}",
-                               requires2=dh.getTemplate(f=f'q25-{series}'), function='sub')
+            dh.registerFormula(dh.Formula2, f"iqr-{series}", requires=f"q75-{series}", function='sub',
+                               requires2={'f': f'q25-{series}'})

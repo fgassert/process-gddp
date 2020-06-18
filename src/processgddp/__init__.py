@@ -21,10 +21,8 @@ OPTIONS = {
     'access_key':ACCESSKEY,
     'secret':SECRETKEY,
     'cachedir':'_cache',
-    'verbose':True
+    'verbose':False
 }
-
-logging.basicConfig(level=logging.INFO)
 
 def build(objs, skipExisting=True, options=OPTIONS, poolargs={}):
     ''''''
@@ -39,13 +37,18 @@ def build_async(objs, skipExisting=True, options=OPTIONS, poolargs={}):
     tree = DependencyHandler.dependencyTree(objs, client, skipExisting, poolargs)
     return tree.build_async(options=options)
 
-def main(keys):
+def main(keys, options=OPTIONS):
+    if options['verbose']:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
     if keys:
         build_async(keys)
     else:
         test()
 
 def test():
+    logging.basicConfig(level=logging.DEBUG)
     keys=[]
     keys.append(DependencyHandler.keyName('gt-q99', 'pr', 'rcp85', 'ACCESS1-0', '2000'))
     keys.append(DependencyHandler.keyName('abs-drydays', 'pr', 'rcp85', 'ACCESS1-0', '2001-2002'))
