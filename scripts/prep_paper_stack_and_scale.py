@@ -21,13 +21,13 @@ def mm2kgs(mm):
 def kgs2mm(kgs):
     return kgs*86400
 
-def stack_and_scale(ch, i, s, y):
+def stack_and_scale(ch, i, s, y, d):
     arr = None
     profile = None
     y1 = y-15
     y2 = y+15
     for e in ['q25', 'q50', 'q75']:
-        rast = raster_template(e, ch, i, s, y1, y2)
+        rast = raster_template(e, ch, i, s, y1, y2, d)
         url = url_template(rast)
         print(f' reading {url}')
         with rio.open(url, 'r') as src:
@@ -49,7 +49,7 @@ def stack_and_scale(ch, i, s, y):
         pfx += '-mmyr'
         arr = kgs2mm(arr)
 
-    outrast = raster_template(pfx, ch, i, s, y1, y2)
+    outrast = raster_template(pfx, ch, i, s, y1, y2, d)
     print(f' writing {outrast}')
     with rio.open(os.path.join(OUTDIR, outrast), 'w', **profile) as dst:
         dst.write(arr.astype(profile['dtype']))
@@ -58,14 +58,12 @@ def stack_and_scale(ch, i, s, y):
 OUTDIR = 'prep_share'
 os.makedirs(OUTDIR, exist_ok=True)
 
-for i in temp_indicators:
+for d in datasets:
     for s in scenarios:
         for y in range(startyear, endyear+1, 10):
-            for ch in ['abs', 'diff']:
-                stack_and_scale(ch, i, s, y)
-
-for i in pr_indicators:
-    for s in scenarios:
-        for y in range(startyear, endyear+1, 10):
-            for ch in ['abs', 'ch']:
-                stack_and_scale(ch, i, s, y)
+            for i in temp_indicators:
+                for ch in ['abs', 'diff']:
+                    stack_and_scale(ch, i, s, y, d)
+            for i in pr_indicators:
+                for ch in ['abs', 'ch']:
+                    stack_and_scale(ch, i, s, y, d)
