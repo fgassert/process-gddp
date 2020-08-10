@@ -4,7 +4,52 @@ import rasterio as rio
 from rasterio import plot, mask
 import numpy as np
 import os
-from prep_paper import *
+
+temp_indicators = [
+    'annual_tasmin',
+    'annual_tasmax',
+    'tavg-tasmin_tasmax',
+    'hdd65f-tasmin_tasmax',
+    'cdd65f-tasmin_tasmax',
+    'frostfree_tasmin',
+    'gt-q99_tasmax'
+]
+
+pr_indicators = [
+    'dryspells_pr',
+    'annual_pr',
+    'gt-q99_pr',
+]
+
+ensembles = [
+    'q50',
+    'q25',
+    'q75',
+    'iqr'
+]
+
+scenarios = [
+    'rcp45',
+    'rcp85'
+]
+
+datasets = [
+    'nexgddp',
+    'loca'
+]
+
+startyear = 2000
+endyear = 2080
+
+
+def raster_template(e, ch, i, s, y1, y2, d):
+    if not d:
+        return f'{e}-{ch}-{i}_{s}_ens_{y1}-{y2}.tif'
+    return f'{e}-{ch}-{i}_{s}_ens_{y1}-{y2}_{d}.tif'
+
+def url_template(rast):
+    return f'https://s3.amazonaws.com/md.cc/tmp/nex-gddp/{rast}'
+
 
 def c2k(c):
     return c+273.15
@@ -17,9 +62,9 @@ def c2f(c):
 def c2f_rel(c):
     return c*9/5
 def mm2kgs(mm):
-    return mm/86400
+    return mm/86400/365
 def kgs2mm(kgs):
-    return kgs*86400
+    return kgs*86400*365
 
 def stack_and_scale(ch, i, s, y, d):
     arr = None
@@ -42,10 +87,10 @@ def stack_and_scale(ch, i, s, y, d):
     profile["count"] = arr.shape[0]
 
     pfx = 'stacked'
-    if i in ['annual_tasmin','annual_tasmax','tavg-tasmin_tasmax']:
+    if i in ['annual_tasmin','annual_tasmax','tavg-tasmin_tasmax'] and ch == 'abs':
         pfx += '-degC'
         arr = k2c(arr)
-    elif i in ['annual_pr']:
+    elif i in ['annual_pr'] and ch == 'abs':
         pfx += '-mmyr'
         arr = kgs2mm(arr)
 

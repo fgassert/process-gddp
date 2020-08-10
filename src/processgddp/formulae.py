@@ -17,9 +17,9 @@ def scale(s):
 
 def dailymean(arr):
     return (arr[:arr.shape[0]//2] + arr[arr.shape[0]//2:]) / 2
-def hdd(v):
-    return lambda arr: np.nansum(np.where(arr>v, arr-v, 0), axis=0, keepdims=True)
 def cdd(v):
+    return lambda arr: np.nansum(np.where(arr>v, arr-v, 0), axis=0, keepdims=True)
+def hdd(v):
     return lambda arr: np.nansum(np.where(arr<v, v-arr, 0), axis=0, keepdims=True)
 
 def subtractArr(arr):
@@ -97,9 +97,9 @@ def c2f_rel(c):
     return c*9/5
 
 def mm2kgs(mm):
-    return mm/86400
+    return mm/86400/365
 def kgs2mm(kgs):
-    return kgs*86400
+    return kgs*86400*365
 
 FUNCTIONS = {
     'mean': bandMean,

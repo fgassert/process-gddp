@@ -93,9 +93,6 @@ def csv():
                             print(', '.join([i, s, str(y), ch, e, d, rast, url]))
 
 
-
-
-
 def check_rename():
     BUCKET = os.getenv('GDDP_BUCKET')
     PREFIX = os.getenv('GDDP_PREFIX')
@@ -138,10 +135,47 @@ def check_rename():
                             print(ex)
                             pass
 
+def rename_hdd_cdd():
+    BUCKET = os.getenv('GDDP_BUCKET')
+    PREFIX = os.getenv('GDDP_PREFIX')
+    session = boto3.session.Session(
+        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+    )
+    client = session.resource('s3')
+    bucket = client.Bucket(BUCKET)
+    
+    d = 'nexgddp'
+    for s in scenarios:
+        for y in range(startyear, endyear+1, 10):
+            y1 = y-15
+            y2 = y+15
+            for e in ensembles:
+                for d in datasets:
+                    for ch in ['abs', 'diff']:
+                        i1 = 'hdd65f-tasmin_tasmax'
+                        i2 = 'cdd65f-tasmin_tasmax'
+                        itmp = 'tmp'
+                        rast1 = os.path.join(PREFIX, raster_template(e, ch, i1, s, y1, y2, d))
+                        rasttmp = os.path.join(PREFIX, raster_template(e, ch, itmp, s, y1, y2, d))
+                        rast2 = os.path.join(PREFIX, raster_template(e, ch, i2, s, y1, y2, d))
+                        if rast1 not in [
+                            'tmp/nex-gddp/q50-abs-hdd65f-tasmin_tasmax_rcp45_ens_1985-2015_nexgddp.tif',
+                            'tmp/nex-gddp/q50-diff-hdd65f-tasmin_tasmax_rcp45_ens_1985-2015_nexgddp.tif'
+                        ]:
+                            print(f'copy from {rast1} to {rasttmp}')
+                            bucket.Object(rasttmp).copy_from(CopySource=os.path.join(BUCKET, rast1))
+                            print(f'copy from {rast2} to {rast1}')
+                            bucket.Object(rast1).copy_from(CopySource=os.path.join(BUCKET, rast2))
+                            print(f'copy from {rasttmp} to {rast2}')
+                            bucket.Object(rast2).copy_from(CopySource=os.path.join(BUCKET, rasttmp))
+                        
 if __name__ == '__main__':
     if len(sys.argv)>1 and sys.argv[1]=='csv':
         csv()
     elif len(sys.argv)>1 and sys.argv[1]=='rename':
         check_rename()
+    elif len(sys.argv)>1 and sys.argv[1]=='fix_cdd':
+        rename_hdd_cdd()
     else:
         main()
