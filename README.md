@@ -1,7 +1,7 @@
 # prep-climate-indicators
 Processing scripts for NEX-GDDP and LOCA CMIP5 climate datasets.
 
-This repository contains a script for generating ensemble indicators from the downscaled CMIP5 datasets:  NASA Earth Exchange Global Daily Downscaled Projections ([NEX-GDDP](https://www.nccs.nasa.gov/services/data-collections/land-based-products/nex-gddp)) (Thrasher and Nemani 2015) for the globe and Localized Constructed Analogs ([LOCA](https://gdo-dcp.ucllnl.org/downscaled_cmip_projections/)) CMIP5 projections for the continental United States (Pierce, Cayan, and Thrasher 2014; Maurer et al. 2007).
+This repository contains a script for generating ensemble indicators from the downscaled CMIP5 datasets [NEX-GDDP](https://www.nccs.nasa.gov/services/data-collections/land-based-products/nex-gddp) (global) and [LOCA](https://gdo-dcp.ucllnl.org/downscaled_cmip_projections/) (continental US).
 
 These data can be viewed at https://prepdata.org/explore.
 
@@ -9,11 +9,11 @@ Learn more at https://wri.org/publications/...
 
 Download the data at https://wri.org/publications/...
 
-**Citation**: Francis Gassert, Cornejo, Enrique, and Nilson, Emily. 2020. "
+**Citation**: Gassert, Francis, Enrique Cornejo, and Emily Nilson. 2020. "Making Climate Data Accessible: Methods and Data for Producing Downscaled Climate Indicators." Technical Note. World Resources Institute. Washington DC. Available at https://wri.org/publications/...
 
 ## Background
 
-The contained scripts reduce the NASA NEX-GDDP (Global) and LOCA (Continental US) datasets into ensemble indicators. NEX-GDDP and LOCA contain daily minimum and maximum temperature and precipitation valuse from several dozen models for two climate scenarios for the period of 1950-2100. These source datasets are large (~12TB and ~9TB, respectively), but can be reduced by several orders of magnitude by computing long term ensemble statistics. 
+This repository contains a script for generating ensemble indicators from the downscaled CMIP5 datasets: NASA Earth Exchange Global Daily Downscaled Projections (NEX-GDDP) (Thrasher and Nemani 2015) for the globe and Localized Constructed Analogs (LOCA) CMIP5 projections for the continental United States (Pierce, Cayan, and Thrasher 2014; Maurer et al. 2007). NEX-GDDP and LOCA contain daily minimum and maximum temperature and precipitation values from several dozen models for two climate scenarios over the period of 1950-2100. These scripts reduce the large size of source datasets (~12TB and ~9TB, respectively) by several orders of magnitude.
 
 This typically takes place in three steps:
 
@@ -26,7 +26,7 @@ This typically takes place in three steps:
 
 These scripts require [Docker](https://docs.docker.com/engine/) and an [AWS](https://aws.amazon.com) account to run. 
 
-This package is designed to compute against the large input data sources using AWS S3 as intermediate storage. This allows it to be run on commodity hardware, with the minimum requirement that some annual indicators may require up to 1.5GB of memory per CPU to compute.
+This package is designed to compute against the large input data sources using AWS S3 as intermediate storage. This allows it to be run on commodity hardware, with the minimum requirement that some annual indicators may require up to 1.5GB of memory per CPU.
 
 ### AWS cost managment note
 
@@ -35,10 +35,10 @@ It is possible to compute the listed indicators under the AWS Free Tier.
 Computation can generate a large amount of intermediate data. It is recommended that you set a [Lifecycle Rule](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-lifecycle.html) on your S3 Bucket to automatically expire (delete) data older than 7 days to avoid accumulating storage cost, and move or download the resulting data that you want to keep.
 
 Under test conditions, computing the listed indicators generated costs as follows:
- - ~$40 - AWS EC2 Spot Instances
+ - ~$40 - AWS EC2 Spot Instance
  - ~$240/month - S3 Storage
 
-Creation of daily average temperature data for heating and cooling degree days accounted for the majority of storage cost.
+The majority of storage cost (~80%) is due to generating daily average temperature data for heating and cooling degree days.
 
 ## Installation
 
@@ -49,7 +49,7 @@ git clone https://github.com/fgassert/process-gddp/
 cd process-gddp
 ```
 
-2. Create a `.env` file with the required environment variables.
+2. Create a `.env` file in the root folder with the following four configuration variables.
 
 ```
 # AWS credentials for accessing S3
@@ -81,7 +81,7 @@ Keynames are composed of the following parts, joined by underscores, with an imp
 {ensemble}-{timefunc}-{indicator}_{variable}_{scenario}_{model}_{years}_{dataset}[.tif]
 ```
 
-e.g. `q50-abs-annual_pr_rcp85_ens_2035-2065_nexgddp.tif` - Median `q50` absolute `abs` average annual `annual` precipitation `pr` for the high emissions scenario `rcp85` across the ensemble `ens` for the 31yr period centered on 2050 `2035-2065` derived from NEX-GDDP `nexgddp`.
+e.g. `q50-abs-annual_pr_rcp85_ens_2035-2065_nexgddp.tif` - Median absolute average annual (`q50-abs-annual`) precipitation (`pr`) for the high emissions scenario (`rcp85`) across the ensemble (`ens`) for the 31yr period centered on 2050 (`2035-2065`) derived from NEX-GDDP (`nexgddp`).
 
 **Formula**
 
@@ -94,29 +94,22 @@ The formula defines what computations to run, the remainder of the keyname defin
 {ensemble}-{timefunc}-{indicator}_...
 ```
 
-Each of these components is a reducing function that depends on the previous. For example, computing ensemble median average annual `q50-abs-annual` precipitation from individual models' average annual `abs-annual` precipitation:
+Each of these components is a reducing function that depends on the previous. For example, computing ensemble median average annual (`q50-abs-annual`) precipitation from individual models' average annual (`abs-annual`) precipitation:
 
 key | is derived from
 --- | ---
-`q50-abs-annual_pr..._ens_...` | `abs-annual_pr..._ACCESS1-0_...`
-`abs-annual_pr..._BNU-ESM_...`
-`abs-annual_pr..._CCSM4_...`
-`abs-annual_pr..._CESM1-BGC_...`
-`abs-annual_pr..._CNRM-CM5_...` ...
+`q50-abs-annual_pr..._ens_...` | `abs-annual_pr..._ACCESS1-0_...` `abs-annual_pr..._BNU-ESM_...` `abs-annual_pr..._CCSM4_...` `abs-annual_pr..._CESM1-BGC_...` `abs-annual_pr..._CNRM-CM5_...` ...
 
-Or computing the 31yr average `abs-annual_pr` from individual annual precipitation `annual_pr`:
+Or computing the 31yr average (`abs-annual`) precipitation from annual (`annual`) precipitation:
 
 key | is derived from
 --- | ---
-`abs-annual_..._2035-2065_...` | `annual_..._2035_...`
-`abs-annual_..._2036_...`
-`abs-annual_..._2037_...`
-`abs-annual_...__...`
-`abs-annual_..._CNRM-CM5_...` ...
+`abs-annual_..._2035-2065_...` | `annual_..._2035_...` `abs-annual_..._2036_...` `abs-annual_..._2037_...` ... `abs-annual_..._2065_...`
 
 #### Valid values for keynames
 
  - **ensemble**
+ 
  value | description
  --- | ---
  `q25` | 25th percentile
@@ -126,6 +119,7 @@ key | is derived from
  `mean` | mean
 
  - **timefunc**
+ 
  value | description
  --- | ---
  `abs` | absolute i.e. the average value over the range of years
@@ -133,6 +127,7 @@ key | is derived from
  `ch` | multiplicative change from baseline (1960-1990) (`"abs_..._{startyear}-{endyear}_..." / "abs_..._1960-1990_..."`)
 
  - **indicator**
+ 
  value | description
  --- | ---
  `annual` | annual average
@@ -153,12 +148,14 @@ key | is derived from
  `cdd65f-tasmin` | Use with `tasmax`. Cooling degree days. The sum of `value - 291.48` (Kelvin) (65ºF) where positive, for each day in a year.
 
  - **years**
+ 
  value | description
  --- | ---
- A single year `1950`-`2100` | Year of data (functions without a `{timefunc}`)
- A range, e.g. `1960-1990` | For multi-year averages (functions with a `{timefunc}`)
+ A single `{year}` between `1950` and `2100` | Year of data (functions without a `{timefunc}`)
+ A range of years `{startyear}-{endyear}` | For multi-year averages (functions with a `{timefunc}`)
 
  - **scenario**
+ 
  value | description
  --- | ---
  `rcp45` | Low emissions scenario
@@ -166,6 +163,7 @@ key | is derived from
  `historical` | Retrospective data (1990-2005 only)
 
  - **model**
+ 
  value | description
  --- | ---
  `ACCESS1-0` `BNU-ESM` `CCSM4` `CESM1-BGC` `CNRM-CM5` `CSIRO-Mk3-6-0` `CanESM2` `GFDL-CM3` `GFDL-ESM2G` `GFDL-ESM2M` `IPSL-CM5A-LR` `IPSL-CM5A-MR` `MIROC-ESM-CHEM` `MIROC-ESM` `MIROC5` `MPI-ESM-LR` `MPI-ESM-MR` `MRI-CGCM3` `NorESM1-M` `bcc-csm1-1` `inmcm4` | Models included in NEX-GDDP
@@ -173,6 +171,7 @@ key | is derived from
  `ens` | For ensemble functions
 
 - **dataset**
+
  value | description
  --- | ---
  `nexgddp` | Derive from NEX GDDP
