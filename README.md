@@ -98,13 +98,13 @@ Each of these components is a reducing function that depends on the previous. Fo
 
 key | is derived from
 --- | ---
-`q50-abs-annual_pr..._ens_...` | `abs-annual_pr..._ACCESS1-0_...` `abs-annual_pr..._BNU-ESM_...` `abs-annual_pr..._CCSM4_...` `abs-annual_pr..._CESM1-BGC_...` `abs-annual_pr..._CNRM-CM5_...` ...
+`q50-abs-annual_..._ens_...` | `abs-annual_..._ACCESS1-0_...` `abs-annual_..._BNU-ESM_...` `abs-annual_..._CCSM4_...` `abs-annual_..._CESM1-BGC_...` `abs-annual_..._CNRM-CM5_...` ...
 
 Or computing the 31yr average (`abs-annual`) precipitation from annual (`annual`) precipitation:
 
 key | is derived from
 --- | ---
-`abs-annual_..._2035-2065_...` | `annual_..._2035_...` `abs-annual_..._2036_...` `abs-annual_..._2037_...` ... `abs-annual_..._2065_...`
+`abs-annual_..._2035-2065_...` | `annual_..._2035_...` `annual_..._2036_...` `annual_..._2037_...` ... `annual_..._2065_...`
 
 #### Valid values for keynames
 
@@ -123,8 +123,8 @@ key | is derived from
  value | description
  --- | ---
  `abs` | absolute i.e. the average value over the range of years
- `diff` | linear change from baseline (1960-1990) (`"abs_..._{startyear}-{endyear}_..." - "abs_..._1960-1990_..."`)
- `ch` | multiplicative change from baseline (1960-1990) (`"abs_..._{startyear}-{endyear}_..." / "abs_..._1960-1990_..."`)
+ `diff` | linear change from baseline (1960-1990) (i.e. `abs_..._{startyear}-{endyear}_...` minus `abs_..._1960-1990_...`)
+ `ch` | multiplicative change from baseline (1960-1990) (i.e. `abs_..._{startyear}-{endyear}_...` divided by `abs_..._1960-1990_...`)
 
  - **indicator**
  
@@ -144,8 +144,8 @@ key | is derived from
  `drydays` | length of longest run of days in a year less than 0.000011574 (kg/m2/s) (1mm/day)
  `dryspells` | number of runs of at least 5 days in a year with less than 0.000011574 (kg/m2/s) (1mm/day). Each day over 5 days counts as 0.2 of a run.
  `tavg-tasmin` | Use with `tasmax`. Daily average temperature. (Specifically, daily value plus `tasmin` divided by 2.)
- `hdd65f-tasmin` | Use with `tasmax`. Heating degree days. The sum of `291.48 - value` (Kelvin) (65ºF) where positive, for each day in a year.
- `cdd65f-tasmin` | Use with `tasmax`. Cooling degree days. The sum of `value - 291.48` (Kelvin) (65ºF) where positive, for each day in a year.
+ `hdd65f-tasmin` | Use with `tasmax`. Heating degree days. The sum of `291.48 - value` (Kelvin) (65ºF), where positive, for each day in a year.
+ `cdd65f-tasmin` | Use with `tasmax`. Cooling degree days. The sum of `value - 291.48` (Kelvin) (65ºF), where positive, for each day in a year.
 
  - **years**
  
@@ -179,7 +179,7 @@ key | is derived from
 
 #### Adding additional indicators or functions
 
-Formula and indicators are defined in `src/processgddp/formulae.py`. The baseline period for indicators that use a baseline, as well as change and difference indicators is defined here.
+Formula and indicators are defined in `src/processgddp/formulae.py`. The baseline period for indicators that use a baseline is defined here.
 
 ## References
 
