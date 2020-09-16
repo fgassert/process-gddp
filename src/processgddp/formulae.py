@@ -170,9 +170,9 @@ def registerFormulae():
                       'frostfree', 'drydays', 'gt85f', 'gt90f',
                       'hdd65f-tasmin', 'cdd65f-tasmin', 'tavg-tasmin', 'dryspells'
     ):
-        ma = 'abs-{}'.format(indicator)
-        diff = 'diff-{}'.format(indicator)
-        ch = 'ch-{}'.format(indicator)
+        ma = f'abs-{indicator}'
+        diff = f'diff-{indicator}'
+        ch = f'ch-{indicator}'
         dh.registerFormula(dh.TimeFormula, ma, indicator, 'mean')
         dh.registerFormula(dh.Formula2, diff, ma, 'sub',
                     requires2={'f':ma, 's':'historical', 'y':BASELINE})
@@ -180,6 +180,6 @@ def registerFormulae():
                     requires2={'f':ma, 's':'historical', 'y':BASELINE})
         for series in [ma, diff, ch]:
             for stat in ['mean', 'q25', 'q75', 'q50']:
-                dh.registerFormula(dh.EnsembleFormula, "{}-{}".format(stat, series), requires=series, function=stat)
+                dh.registerFormula(dh.EnsembleFormula, f"{stat}-{series}", requires=series, function=stat)
             dh.registerFormula(dh.Formula2, f"iqr-{series}", requires=f"q75-{series}", function='sub',
                                requires2={'f': f'q25-{series}'})

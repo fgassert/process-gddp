@@ -15,17 +15,24 @@ BUCKET = os.getenv('GDDP_BUCKET', 'gddp')
 ACCESSKEY = os.getenv('AWS_ACCESS_KEY_ID') or os.getenv('AWS_KEY')
 SECRETKEY = os.getenv('AWS_SECRET_ACCESS_KEY') or os.getenv('AWS_SECRET')
 OPTIONS = {
-    'nocache':True,
-    'bucket':BUCKET,
+    # AWS credentials and S3 storage location
+    'bucket':BUCKET,        
     'prefix':PREFIX,
     'access_key':ACCESSKEY,
     'secret':SECRETKEY,
-    'cachedir':'_cache',
+    
+    # Delete files from local cache after uploading to S3
+    #  disable to decrease network load but increase local storage requirements
+    #  also increases chance of collision due to mutiple processes attempting to 
+    #  read/write same file
+    'nocache':True,
+    
+    'cachedir':'_cache',    
     'verbose':False
 }
 
 def build(objs, skipExisting=True, options=OPTIONS, poolargs={}):
-    ''''''
+    '''executes the formulae for each key one at a time'''
     client = FileHandler.Client(**options)
     tree = DependencyHandler.dependencyTree(objs, client, skipExisting, poolargs)
     return tree.build(options=options)

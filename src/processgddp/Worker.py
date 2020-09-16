@@ -81,6 +81,8 @@ def _readNC(infile, dataset):
                 "transform":rio.Affine(360.0/w,0,-180,0,-180.0/h,90),
                 "crs":"EPSG:4326"
             })
+        elif dataset == DependencyHandler.LOCA:
+            profile.update({'crs':"EPSG:4326"})
         return arr, profile
 
 def _readTiff(infile):

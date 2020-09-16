@@ -193,6 +193,20 @@ def _addDependencies(tree, key, client, skipExisting=False):
                 tree.skip_task(k)
 
 def registerFormula(ftype, name=None, requires=SOURCEDATA, function=None, **kwargs):
+    '''
+    Register a formula to define required input and function to run for each output key
+
+    For a given output key:
+        "{`name`}_{variable}_{scenario}_{model}_{year}_{dataset}"
+    It run `fuction` against the matching:
+        "{`requires`}_{variable}_{scenario}_{model}_{year}_{dataset}"
+
+    ftype       Formula, Formula2, TimeFormula, or EnsembleFormula
+    name        string name of formula
+    requires    string formula this depends on or "src" to use the dataset source
+    function    string name of function defined in formulae.FUNCTIONS
+    **kwargs    additional parameters for specific formula types
+    '''
     if name is None:
         name = '{}-{}'.format(function, requires)
     if name in _Formulae:
@@ -206,7 +220,22 @@ def buildKey(key, *args, **kwargs):
     return formula.getFunction()(key, requires, *args, **kwargs)
 
 class Formula:
+    '''
+    Class for recording required inputs for each output keys.
+
+    For a given output key:
+        "{`name`}_{variable}_{scenario}_{model}_{year}_{dataset}"
+    It run `fuction` against the matching:
+        "{`requires`}_{variable}_{scenario}_{model}_{year}_{dataset}"
+
+    name        string name of formula
+    requires    string formula this depends on or "src" to use the dataset source
+    function    string name of function defined in formulae.FUNCTIONS
+    description string description
+    '''
+
     def __init__(self, name, requires, function, description=''):
+
         self.name = name
         self.function = function
         self._requires = requires
@@ -230,6 +259,24 @@ class Formula:
         return partial(worker, function=self.function)
 
 class Formula2(Formula):
+    '''
+    Class for recording required inputs for each output keys, where a output depends
+    on two distinct inputs
+
+    For a given output key:
+        "{`name`}_{variable}_{scenario}_{model}_{year}_{dataset}"
+    It run `fuction` against the matching:
+        "{`requires`}_{variable}_{scenario}_{model}_{year}_{dataset}"
+        stacked on axis 0 with
+        `requires2`
+
+    name        string name of formula
+    requires    string name of formula this depends on or "src" to use the dataset source
+    requires2   string keyname or partial keyname this depends on.
+    function    string name of function to run defined in formulae.FUNCTIONS
+    description string description
+    '''
+    
     def __init__(self, name, requires, function, requires2, description=''):
         self.name = name
         self.function = function
@@ -252,6 +299,23 @@ class Formula2(Formula):
         ]
 
 class TimeFormula(Formula):
+    '''
+    Class for recording required inputs for each output keys, where a output depends
+    on a time series of inputs.
+
+    For a given output key:
+        "{`name`}_{variable}_{scenario}_{model}_{startyear}-{endyear}_{dataset}"
+    It run `fuction` against the matching stack of:
+        "{`requires`}_{variable}_{scenario}_{model}_{startyear}_{dataset}"
+        ...
+        "{`requires`}_{variable}_{scenario}_{model}_{endyear}_{dataset}"
+
+    name        string name of formula
+    requires    string name of formula this depends on or "src" to use the dataset source
+    function    string name of function to run defined in formulae.FUNCTIONS
+    description string description
+    '''
+
     def __repr__(self):
         return getTemplate(self.name, y="{startYear}-{endYear}")
     def requires(self, v, s, m, y, d):
@@ -267,6 +331,22 @@ class TimeFormula(Formula):
         ]
 
 class EnsembleFormula(Formula):
+    '''
+    Class for recording required inputs for each output keys, where a output is computed across
+    all models in the ensemble.
+
+    For a given output key:
+        "{`name`}_{variable}_{scenario}_ens_{years}_{dataset}"
+    It run `fuction` against the matching stack of:
+        "{`requires`}_{variable}_{scenario}_ACCESS1-0_{years}_{dataset}"
+        ...
+        "{`requires`}_{variable}_{scenario}_inmcm4_{years}_{dataset}"
+
+    name        string name of formula
+    requires    string name of formula this depends on or "src" to use the dataset source
+    function    string name of function defined in formulae.FUNCTIONS
+    description string description
+    '''
     def __repr__(self):
         return getTemplate(self.name, m=ENSEMBLE, y="{startYear}-{endYear}")
     def yields(self, v, s, m, y, d):
