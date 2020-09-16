@@ -19,8 +19,12 @@ def dailymean(arr):
     return (arr[:arr.shape[0]//2] + arr[arr.shape[0]//2:]) / 2
 def cdd(v):
     return lambda arr: np.nansum(np.where(arr>v, arr-v, 0), axis=0, keepdims=True)
+def cdd_tmin_tmax(v):
+    return lambda arr: cdd(v)(dailymean(arr))
 def hdd(v):
     return lambda arr: np.nansum(np.where(arr<v, v-arr, 0), axis=0, keepdims=True)
+def hdd_tmin_tmax(v):
+    return lambda arr: hdd(v)(dailymean(arr))
 
 def subtractArr(arr):
     return arr[:-1]-arr[-1]
@@ -97,8 +101,10 @@ def c2f_rel(c):
     return c*9/5
 
 def mm2kgs(mm):
-    return mm/86400/365
+    return mm/86400
 def kgs2mm(kgs):
+    return kgs*86400
+def kgs2mmyr(kgs):
     return kgs*86400*365
 
 FUNCTIONS = {
@@ -122,6 +128,10 @@ FUNCTIONS = {
     'cdd65f':cdd(f2k(65)),
     'hdd16c':hdd(c2k(16)),
     'cdd16c':cdd(c2k(16)),
+    'hdd65f_tmin_tmax':hdd_tmin_tmax(f2k(65)),
+    'cdd65f_tmin_tmax':cdd_tmin_tmax(f2k(65)),
+    'hdd16c_tmin_tmax':hdd_tmin_tmax(c2k(16)),
+    'cdd16c_tmin_tmax':cdd_tmin_tmax(c2k(16)),
     'mmday':kgs2mm,
     'degc':k2c,
     'degf':k2f,
@@ -159,16 +169,17 @@ def registerFormulae():
     # tavg (averages in tmin)
     dh.registerFormula(dh.Formula2, name='tavg-tasmin', requires='annual', function='mean',
                        requires2={'f':'annual', 'v':'tasmin'})
-    dh.registerFormula(dh.Formula2, name='daily-tavg-tasmin', requires='src', function='dailymean',
+    dh.registerFormula(dh.Formula2, name='hdd65f-tasmin', requires='src', function='hdd65f_tmin_tmax',
                        requires2={'f':'src', 'v':'tasmin'})
-    dh.registerFormula(dh.Formula, name='hdd65f-tasmin', requires='daily-tavg-tasmin', function='hdd65f')
-    dh.registerFormula(dh.Formula, name='cdd65f-tasmin', requires='daily-tavg-tasmin', function='cdd65f')
+    dh.registerFormula(dh.Formula2, name='cdd65f-tasmin', requires='src', function='cdd65f_tmin_tmax',
+                       requires2={'f':'src', 'v':'tasmin'})
 
     # moving averages and ensembles for each indicator
     for indicator in ('annual', 'q98', 'q99', 'gt-q99',
                       'gt-q98', 'gt50mm', 'gt95f', 'gt32f',
                       'frostfree', 'drydays', 'gt85f', 'gt90f',
-                      'hdd65f-tasmin', 'cdd65f-tasmin', 'tavg-tasmin', 'dryspells'
+                      'hdd65f-tasmin', 'cdd65f-tasmin', 
+                      'tavg-tasmin', 'dryspells'
     ):
         ma = f'abs-{indicator}'
         diff = f'diff-{indicator}'

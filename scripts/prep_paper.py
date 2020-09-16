@@ -52,7 +52,7 @@ DATA_DIR = 'prep_share'
 
 def k2c(k):
     return k-273.15
-def kgs2mm(kgs):
+def kgs2mmyr(kgs):
     return kgs*86400*365
 
 def raster_template(e, ch, i, s, y1, y2, d):
@@ -241,7 +241,7 @@ def stack_and_scale():
             if conv_degC:
                 arr = k2c(arr)
             elif conv_mmyr:
-                arr = kgs2mm(arr)
+                arr = kgs2mmyr(arr)
             
             print(f' writing {outrast}')
             profile["driver"] = "GTiff"
