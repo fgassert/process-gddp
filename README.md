@@ -32,13 +32,11 @@ This package is designed to compute against the large input data sources using A
 
 It is possible to compute the listed indicators under the AWS Free Tier.
 
-Computation can generate a large amount of intermediate data. It is recommended that you set a [Lifecycle Rule](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-lifecycle.html) on your S3 Bucket to automatically expire (delete) data older than 7 days to avoid accumulating storage cost, and move or download the resulting data that you want to keep.
+Computation can generate a large amount of intermediate data. It is recommended that you set a [Lifecycle Rule](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-lifecycle.html) on your S3 Bucket to automatically expire (delete) data older than 30 days to avoid accumulating storage cost, and move or download the resulting data that you want to keep.
 
 Under test conditions, computing the listed indicators generated costs as follows:
  - ~$40 - AWS EC2 Spot Instance
- - ~$240/month - S3 Storage
-
-The majority of storage cost (~80%) is due to generating daily average temperature data for heating and cooling degree days.
+ - ~$50/month - S3 Storage
 
 ## Installation
 
@@ -58,7 +56,7 @@ AWS_SECRET_ACCESS_KEY={aws-secret-access-key}
 
 # Bucket name for saving data
 GDDP_BUCKET={bucket-name}
-# Prefix (folder) in which you want to save data i.e. s3://{bucket-name}/{prefix-name}
+# Prefix (folder) in which you want to save data i.e. s3://{bucket-name}/{prefix-name}/
 GDDP_PREFIX={folder-name}
 ```
 
@@ -67,17 +65,19 @@ GDDP_PREFIX={folder-name}
 There is a shell script in the root directory to build and run the main script in a docker container. It takes any number of `keyname`s (output file names) as parameters. For each keyname, it will determine what input data and intermediate steps are needed to generate that output, and produce them in order.
 
  - `./start.sh` - Run without parameters to generate a few test outputs.
- - `./start.sh [keyname] [keyname]...` - Compute specific outputs
- - `./start.sh $(cat scripts/outputs.txt)` - Compute all outputs listed in `scripts/outputs.txt`
+ - `./start.sh [keyname] [keyname]...` - Compute specific outputs.
+ - `./start.sh $(cat scripts/outputs.txt)` - Compute all outputs listed in `scripts/outputs.txt`.
+
+Outputs and intermediate results are saved in `s3://{GDDP_BUCKET}/{GDDP_PREFIX}/`.
 
 ### Keynames
 
-Keynames are these are the output filenames that will be generated, but also define what to compute.
+Keynames are the output filenames that will be generated, but also define what to compute.
 
 Keynames are composed of the following parts, joined by underscores, with an implied `.tif` extension:
 ```
-{formula}_{variable}_{scenario}_{model}_{years}_{dataset}[.tif]
-# or more expansively
+                        {formula}_{variable}_{scenario}_{model}_{years}_{dataset}[.tif]
+# or expanding {formula} into subcomponents:
 {ensemble}-{timefunc}-{indicator}_{variable}_{scenario}_{model}_{years}_{dataset}[.tif]
 ```
 
@@ -88,6 +88,7 @@ e.g. `q50-abs-annual_pr_rcp85_ens_2035-2065_nexgddp.tif` - Median absolute avera
 The formula defines what computations to run, the remainder of the keyname defines what data to run the computationts against. The `{formula}` can be decomposed further as follows:
 
 ```
+# {formula} can be decompose into:
                       {indicator}_...
            {timefunc}-{indicator}_...
 # or
@@ -147,12 +148,13 @@ key | is derived from
  `hdd65f-tasmin` | Use with `tasmax`. Heating degree days. The sum of `291.48 - value` (Kelvin) (65ºF), where positive, for each day in a year.
  `cdd65f-tasmin` | Use with `tasmax`. Cooling degree days. The sum of `value - 291.48` (Kelvin) (65ºF), where positive, for each day in a year.
 
- - **years**
- 
+ - **variables**
+
  value | description
  --- | ---
- A single `{year}` between `1950` and `2100` | Year of data (functions without a `{timefunc}`)
- A range of years `{startyear}-{endyear}` | For multi-year averages (functions with a `{timefunc}`)
+ `pr` | precipitation (kg/ms/s)
+ `tasmin` | daily minimum temperature
+ `tasmax` | daily maximum temperature
 
  - **scenario**
  
@@ -170,7 +172,15 @@ key | is derived from
  `ACCESS1-0` `ACCESS1-3` `CCSM4` `CESM1-BGC` `CESM1-CAM5` `CMCC-CM` `CMCC-CMS` `CNRM-CM5` `CSIRO-Mk3-6-0` `CanESM2` `EC-EARTH` `FGOALS-g2` `GFDL-CM3` `GFDL-ESM2G` `GFDL-ESM2M` `GISS-E2-H` `GISS-E2-R` `HadGEM2-AO` `HadGEM2-CC` `HadGEM2-ES` `IPSL-CM5A-LR` `IPSL-CM5A-MR` `MIROC-ESM` `MIROC-ESM-CHEM` `MIROC5` `MPI-ESM-LR` `MPI-ESM-MR` `MRI-CGCM3` `NorESM1-M` `bcc-csm1-1` `bcc-csm1-1-m` `inmcm4` | Models included in LOCA
  `ens` | For ensemble functions
 
-- **dataset**
+ - **years**
+ 
+ value | description
+ --- | ---
+ A single `{year}` between `1950` and `2100` | Year of data (functions without a `{timefunc}`)
+ A range of years `{startyear}-{endyear}` | For multi-year averages (functions with a `{timefunc}`)
+
+
+ - **dataset**
 
  value | description
  --- | ---
