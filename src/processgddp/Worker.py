@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import rasterio as rio
-import urllib
 import logging
 
 from . import FileHandler
@@ -68,12 +67,13 @@ def _readNC(infile, dataset):
     with rio.open(infile) as src:
         arr = src.read()
         profile = src.profile
+        # No Data
+        if 'nodata' in profile:
+            arr[arr==profile['nodata']] = np.nan
 
         # Reshape NEXGDDP raster
         if dataset == DependencyHandler.NEXGDDP:
             _,h,w = arr.shape
-            # No Data
-            arr[arr==profile['nodata']] = np.nan
             # Roll x-axis for 180W origin
             arr = np.roll(arr, int(w/2), axis=2)
             # Set scale to .25 and origin to 90S,180W

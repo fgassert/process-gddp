@@ -1,82 +1,26 @@
-# prep-climate-indicators
-Processing scripts for NEX-GDDP and LOCA CMIP5 climate datasets.
+# PREP Downscaled Climate Indicators
+Summary climate indicators derived from the downscaled CMIP5 datasets [NEX-GDDP](https://www.nccs.nasa.gov/services/data-collections/land-based-products/nex-gddp) (global) and [LOCA](https://gdo-dcp.ucllnl.org/downscaled_cmip_projections/) (continental US).
 
-This repository contains a script for generating ensemble indicators from the downscaled CMIP5 datasets [NEX-GDDP](https://www.nccs.nasa.gov/services/data-collections/land-based-products/nex-gddp) (global) and [LOCA](https://gdo-dcp.ucllnl.org/downscaled_cmip_projections/) (continental US).
-
-These data can be viewed at https://prepdata.org/explore.
-
-Learn more at https://www.wri.org/research/making-climate-data-accessible
-
-**Citation**: Gassert, Francis, Enrique Cornejo, and Emily Nilson. 2021. "Making Climate Data Accessible: Methods for Producing NEX-GDDP and LOCA Downscaled Climate Indicators." Technical Note. World Resources Institute. Washington DC. Available at https://www.wri.org/research/making-climate-data-accessible
+**Citation**: Gassert, Francis, Enrique Cornejo, and Emily Nilson. 2021. "Making Climate Data Accessible: Methods for Producing NEX-GDDP and LOCA Downscaled Climate Indicators." Technical Note. World Resources Institute. Washington DC. Available at https://www.wri.org/research/making-climate-data-accessible 
 
 ## Background
 
-This repository contains a script for generating ensemble indicators from the downscaled CMIP5 datasets: NASA Earth Exchange Global Daily Downscaled Projections (NEX-GDDP) (Thrasher and Nemani 2015) for the globe and Localized Constructed Analogs (LOCA) CMIP5 projections for the continental United States (Pierce, Cayan, and Thrasher 2014; Maurer et al. 2007). NEX-GDDP and LOCA contain daily minimum and maximum temperature and precipitation values from several dozen models for two climate scenarios over the period of 1950-2100. These scripts reduce the large size of source datasets (~12TB and ~9TB, respectively) by several orders of magnitude.
+This repository contains ensemble indicators derived from the downscaled CMIP5 datasets: NASA Earth Exchange Global Daily Downscaled Projections (NEX-GDDP) (Thrasher and Nemani 2015) for the globe and Localized Constructed Analogs (LOCA) CMIP5 projections for the continental United States (Pierce, Cayan, and Thrasher 2014; Maurer et al. 2007). NEX-GDDP and LOCA contain daily minimum and maximum temperature and precipitation values from several dozen models for two climate scenarios over the period of 1950-2100. 
 
-This typically takes place in four steps:
+The data are derived following four steps:
 
  1. For each model, scenario, and year: compute annual indicators
  2. For each indicator, model, and scenario: compute moving averages (typically 30yrs)
  3. For each indicator, model, and scenario: compute difference and/or change layers
  4. For each indicator and scenario: compute statistics across the ensemble of models (e.g. median)
 
-## Requirements
+### Filenames
 
-These scripts require [Docker](https://docs.docker.com/engine/) and an [AWS](https://aws.amazon.com) account to run. 
-
-This package is designed to compute against the large input data sources using AWS S3 as intermediate storage. This allows it to be run on commodity hardware, with the minimum requirement that some annual indicators may require up to 1.5GB of memory per CPU.
-
-### AWS cost managment note
-
-It is possible to compute the listed indicators under the AWS Free Tier.
-
-Computation can generate a large amount of intermediate data. It is recommended that you set a [Lifecycle Rule](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-lifecycle.html) on your S3 Bucket to automatically expire (delete) data older than 30 days to avoid accumulating storage cost, and move or download the resulting data that you want to keep.
-
-Under test conditions, computing the listed indicators generated costs as follows:
- - ~$40 - AWS EC2 Spot Instance
- - ~$50/month - S3 Storage
-
-## Installation
-
-1. Download the repository
-
+Filenames are composed of the following parts, joined by underscores:
 ```
-git clone https://github.com/fgassert/process-gddp/
-cd process-gddp
-```
-
-2. Create a `.env` file in the root folder with the following four configuration variables.
-
-```
-# AWS credentials for accessing S3
-AWS_ACCESS_KEY_ID={aws-access-key-id}
-AWS_SECRET_ACCESS_KEY={aws-secret-access-key}
-
-# Bucket name for saving data
-GDDP_BUCKET={bucket-name}
-# Prefix (folder) in which you want to save data i.e. s3://{bucket-name}/{prefix-name}/
-GDDP_PREFIX={folder-name}
-```
-
-## Usage
-
-There is a shell script in the root directory to build and run the main script in a docker container. It takes any number of `keyname`s (output file names) as parameters. For each keyname, it will determine what input data and intermediate steps are needed to generate that output, and produce them in order.
-
- - `./start.sh` - Run without parameters to generate a few test outputs.
- - `./start.sh [keyname] [keyname]...` - Compute specific outputs.
- - `./start.sh $(cat scripts/outputs.txt)` - Compute all outputs listed in `scripts/outputs.txt`.
-
-Outputs and intermediate results are saved in `s3://{GDDP_BUCKET}/{GDDP_PREFIX}/`.
-
-### Keynames
-
-Keynames are the output filenames that will be generated, but also define what to compute.
-
-Keynames are composed of the following parts, joined by underscores, with an implied `.tif` extension:
-```
-                        {formula}_{variable}_{scenario}_{model}_{years}_{dataset}[.tif]
+                        {formula}_{variable}_{scenario}_{model}_{years}_{dataset}.tif
 # or expanding {formula} into subcomponents:
-{ensemble}-{timefunc}-{indicator}_{variable}_{scenario}_{model}_{years}_{dataset}[.tif]
+{ensemble}-{timefunc}-{indicator}_{variable}_{scenario}_{model}_{years}_{dataset}.tif
 ```
 
 e.g. `q50-abs-annual_pr_rcp85_ens_2035-2065_nexgddp.tif` - Median absolute average annual (`q50-abs-annual`) precipitation (`pr`) for the high emissions scenario (`rcp85`) across the ensemble (`ens`) for the 31yr period centered on 2050 (`2035-2065`) derived from NEX-GDDP (`nexgddp`).
@@ -184,10 +128,6 @@ key | is derived from
  --- | ---
  `nexgddp` | Derive from NEX GDDP
  `loca` | Derive from LOCA
-
-#### Adding additional indicators or functions
-
-Formula and indicators are defined in `src/processgddp/formulae.py`. The baseline period for indicators that use a baseline is defined here.
 
 ## References
 

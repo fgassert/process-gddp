@@ -98,6 +98,7 @@ def csv():
     for e, ch, i, s, y1, y2, d in _gen_all_args():
         rast = raster_template(e, ch, i, s, y1, y2, d)
         url = url_template(rast)
+        y = f'{y1}-{y2}'
         print(', '.join([i, s, str(y), ch, e, d, rast, url]))
 
 
@@ -150,7 +151,6 @@ def download_zip():
     zips = {}
 
     download()
-    fix_loca_projection()
     for e, ch, i, s, y1, y2, d in _gen_all_args():
         rast = raster_template(e, ch, i, s, y1, y2, d)
         zipname = os.path.join(DATA_DIR, f'{d}_{i}.zip')
@@ -191,6 +191,29 @@ def fix_loca_projection():
                     count += 1
                     print(f'fixed proj for {count} rasters', end='\r')
     print('All LOCA rasts have CRS')
+
+
+def fix_loca_mask():
+    download()
+
+    rast = raster_template('q50', 'abs', 'annual_tasmax', 'historical', 1960, 1990, 'loca')
+    fname = os.path.join(DATA_DIR, rast)
+    with rio.open(fname, 'r') as src:
+        mask = src.read()
+        mask = (mask >= 1e30) | (mask == np.nan)
+
+    print(f"masksize: {mask.sum()/mask.size}")
+    
+    for e, ch, i, s, y1, y2, d in _gen_all_args():
+        if d == 'loca':
+            rast = raster_template(e, ch, i, s, y1, y2, d)
+            fname = os.path.join(DATA_DIR, rast)
+            print(f'masking {rast}')
+            with rio.open(fname, 'r+') as dst:
+                arr = dst.read()
+                arr[mask] = np.nan
+                dst.write(arr)
+
 
 def stack_and_scale():
     download()
@@ -284,5 +307,7 @@ if __name__ == '__main__':
         stack_and_scale()
     elif len(sys.argv)>1 and sys.argv[1]=='locaproj':
         fix_loca_projection()
+    elif len(sys.argv)>1 and sys.argv[1]=='locamask':
+        fix_loca_mask()
     else:
         main()
