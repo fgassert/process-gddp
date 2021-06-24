@@ -5,6 +5,10 @@ This repository contains a script for generating ensemble indicators from the do
 
 These data can be viewed at https://prepdata.org/explore.
 
+Downloads are available at: 
+ - http://wri-public-data.s3.amazonaws.com/resourcewatch/raster/nexgddp.zip
+ - http://wri-public-data.s3.amazonaws.com/resourcewatch/raster/loca.zip
+
 Learn more at https://www.wri.org/research/making-climate-data-accessible
 
 **Citation**: Gassert, Francis, Enrique Cornejo, and Emily Nilson. 2021. "Making Climate Data Accessible: Methods for Producing NEX-GDDP and LOCA Downscaled Climate Indicators." Technical Note. World Resources Institute. Washington DC. Available at https://www.wri.org/research/making-climate-data-accessible
